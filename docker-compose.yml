@@ -1,0 +1,35 @@
+name: receipt-app
+
+services:
+  api:
+    build: 
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - PORT=3000
+    networks:
+      - app-net
+    develop:
+      watch:
+        - action: sync+restart
+          path: ./backend
+          target: /usr/src/app
+          ignore:
+            - node_modules/
+        - action: rebuild
+          path: package.json
+  tesseract:
+    build:
+      context: ./tesseract-ocr
+      dockerfile: Dockerfile
+    networks:
+      - app-net
+    develop:
+      watch:
+        - action: sync+restart
+          path: ./tesseract-ocr
+          target: /app
+networks:
+  app-net:

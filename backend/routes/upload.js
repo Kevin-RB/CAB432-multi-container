@@ -1,5 +1,6 @@
 import express from 'express';
 import { upload } from '../middleware/upload.js';
+import axios from 'axios';
 
 const router = express.Router();
 
@@ -33,24 +34,40 @@ router.post('/upload', upload.single('file'), async (req, res) => {
         const formData = new FormData();
         formData.append('image', new Blob([file.buffer]), file.originalname);
 
-        const ocrResponse = await fetch('http://tesseract-service:3001/ocr', {
-            method: 'POST',
-            body: formData
-        });
+        const tesseractResponse = await axios.get('http://tesseract:3001/health')
 
-        if (!ocrResponse.ok) {
-            throw new Error(`OCR service error: ${ocrResponse.statusText}`);
+        if (tesseractResponse.statusText !== 'OK') {
+            throw new Error(`Tesseract service not reachable: ${tesseractResponse.statusText}`);
         }
 
-        const ocrResult = await ocrResponse.json();
-
-        // Return combined response
         res.json({
-            success: true,
-            message: 'File uploaded and OCR processed successfully',
-            fileInfo,
-            ocrResult
+            message: 'File Upload API is running!',
+            tesseract_status: 'Connected',
+            file: fileInfo,
+            tesseract_response: tesseractResponse.data,
+            endpoints: {
+                upload: 'POST /upload - Upload an image or PDF file'
+            }
         });
+
+        // const ocrResponse = await fetch('http://tesseract-service:3001/ocr', {
+        //     method: 'POST',
+        //     body: formData
+        // });
+
+        // if (!ocrResponse.ok) {
+        //     throw new Error(`OCR service error: ${ocrResponse.statusText}`);
+        // }
+
+        // const ocrResult = await ocrResponse.json();
+
+        // // Return combined response
+        // res.json({
+        //     success: true,
+        //     message: 'File uploaded and OCR processed successfully',
+        //     fileInfo,
+        //     ocrResult
+        // });
 
     } catch (error) {
         console.error('Upload/OCR error:', error);
