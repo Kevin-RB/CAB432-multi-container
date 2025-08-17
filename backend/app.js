@@ -1,6 +1,7 @@
 import express from 'express';
 import { handleUploadError } from './middleware/upload.js';
-import routes from './routes/index.js';
+import uploadRoutes from './routes/index.js';
+import ollamaRoutes from './routes/ollama-routes.js';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -9,7 +10,8 @@ const PORT = process.env.PORT || 3000;
 app.use(express.json());
 
 // Routes
-app.use('/', routes);
+app.use('/', uploadRoutes);
+app.use('/ollama', ollamaRoutes);
 
 // Error handling middleware for multer
 app.use(handleUploadError);

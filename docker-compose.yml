@@ -31,5 +31,19 @@ services:
         - action: sync+restart
           path: ./tesseract-ocr
           target: /app
+
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama:/root/.ollama
+    networks:
+      - app-net   # attach to same network as api + tesseract
+
 networks:
   app-net:
+
+volumes:
+  ollama:

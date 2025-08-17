@@ -6,12 +6,12 @@ const router = express.Router();
 
 // Health check endpoint
 router.get('/', async (req, res) => {
-    console.log('Health check endpoint hit');    
+    console.log('Health check endpoint hit');
     try {
         // Make a GET request to the tesseract container
         const tesseractResponse = await axios.get('http://tesseract:3001/health');
         console.log('Tesseract service response:', tesseractResponse.data);
-        
+
         res.json({
             message: 'File Upload API is running!',
             tesseract_status: 'Connected',
@@ -22,7 +22,7 @@ router.get('/', async (req, res) => {
         });
     } catch (error) {
         console.error('Failed to connect to tesseract service:', error.message);
-        
+
         res.json({
             message: 'File Upload API is running!',
             tesseract_status: 'Disconnected',
