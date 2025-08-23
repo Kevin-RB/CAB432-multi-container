@@ -25,8 +25,7 @@ def health_check():
 
 @app.route('/ocr', methods=['POST'])
 def extract_text():
-    logger.info('Request method: %s', request.method)
-    logger.info('Request files: %s', request.files)
+    logger.info('Extracting text: %s', request.method)
     try:
         # Check if request contains file or base64 data
         if 'image' not in request.files:
@@ -47,7 +46,7 @@ def extract_text():
         # Perform OCR
         custom_oem_psm_config = r'--oem 1 --psm 6 -c preserve_interword_spaces=1'
         extracted_text = pytesseract.image_to_string(image, config=custom_oem_psm_config)
-        
+        logger.info('Text extracted successfully')
         return jsonify({
             'text': extracted_text.strip(),
             'status': 'success',

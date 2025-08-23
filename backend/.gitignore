@@ -94,13 +94,5 @@ jspm_packages/
 ehthumbs.db
 Thumbs.db
 
-# Temporary files
-tmp/
-temp/
-
 # Uploaded files (if any are temporarily stored)
 uploads/
-
-# TypeScript files (now that we're using JavaScript)
-*.ts
-tsconfig.json
