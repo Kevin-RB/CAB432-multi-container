@@ -36,11 +36,30 @@ router.post('/upload', upload.single('file'), async (req, res) => {
             throw new Error(`OCR service error: ${ocrResponse.statusText}`);
         }
 
+        const llmResponse = await axios.post('http://ollama:11434/api/generate', {
+            prompt: `Generate a poem for kids, based on the items on this receipt:
+            : ${ocrResponse.data.text}`,
+            model: 'gemma3:1b',
+            stream: false
+        });
+        // const llmResponse = await axios.post('http://ollama:11434/api/generate', {
+        //     prompt: `Generate a summary of the following receipt OCR-extracted text,
+        //     fix any typos or special characters that might not be captured correctly:
+        //     : ${ocrResponse.data.text}`,
+        //     model: 'gemma3:1b',
+        //     stream: false
+        // });
+
+        if (llmResponse.statusText !== 'OK') {
+            throw new Error(`LLM service error: ${llmResponse.statusText}`);
+        }
+
         res.json({
             success: true,
-            message: 'File uploaded and OCR processed successfully',
+            message: 'Image uploaded and processed successfully',
             fileInfo: fileInfo,
             ocrResult: ocrResponse.data,
+            llmResult: llmResponse.data 
         });
 
     } catch (error) {

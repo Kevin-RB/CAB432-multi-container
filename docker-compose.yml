@@ -11,6 +11,9 @@ services:
       - PORT=3000
     networks:
       - app-net
+    depends_on:
+      - ollama
+      - tesseract
     develop:
       watch:
         - action: sync+restart
@@ -20,18 +23,24 @@ services:
             - node_modules/
         - action: rebuild
           path: package.json
+
   tesseract:
     build:
       context: ./tesseract-ocr
       dockerfile: Dockerfile
     networks:
       - app-net
+    healthcheck:
+      test: ["CMD", "tesseract --version"]
+      interval: 1m
+      timeout: 5s
+      retries: 3
+      start_period: 30s
     develop:
       watch:
         - action: sync+restart
           path: ./tesseract-ocr
           target: /app
-
   ollama:
     image: ollama/ollama:latest
     container_name: ollama
@@ -40,7 +49,36 @@ services:
     volumes:
       - ollama:/root/.ollama
     networks:
-      - app-net   # attach to same network as api + tesseract
+      - app-net
+    environment:
+      - OLLAMA_HOST=0.0.0.0
+    # healthcheck:
+    #   test: ["CMD", "curl", "-f", "http://localhost:11434/api/tags"]
+    #   interval: 1m
+    #   timeout: 30s
+    #   retries: 5
+    #   start_period: 30s
+    depends_on:
+      ollama-init:
+        condition: service_completed_successfully
+
+  ollama-init:
+    image: ollama/ollama:latest
+    container_name: ollama-init
+    volumes:
+      - ollama:/root/.ollama
+    networks:
+      - app-net
+    environment:
+      - OLLAMA_HOST=0.0.0.0
+    entrypoint: >
+      sh -c "
+      ollama serve &
+      sleep 10 &&
+      ollama pull gemma3:1b &&
+      pkill ollama
+      "
+    restart: "no"
 
 networks:
   app-net:
