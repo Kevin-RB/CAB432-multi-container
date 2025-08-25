@@ -3,6 +3,7 @@ import { extractReceiptInfo } from '../../services/ollama.js';
 import config from '../../config/index.js';
 import { receiptSchema } from '../../models/receipt.js';
 import { getFileInfo, readFileBuffer, cleanupFile } from '../../services/multer.js';
+import { addToStorage } from './receipts.controller.js';
 import fs from 'fs';
 import path from 'path';
 
@@ -38,18 +39,29 @@ export const uploadFile = async (req, res) => {
         console.log('OCR completed, sending text for LLM extraction');
 
         // EARLY RETURN FOR TESTING
+        const responseData = {
+            fileInfo,
+            ocrResult: ocrResponse.data,
+            receiptData: {random: 'data'},
+            processing: {
+                duration: "2550",
+                timestamp: new Date().toISOString()
+            }
+        };
+
+        // Store the processed data
+        const storedReceipt = addToStorage({
+            data: responseData
+        });
 
         res.json({
             success: true,
             message: 'File uploaded and processed successfully',
-            data: {
-                fileInfo,
-                ocrResult: ocrResponse.data,
-                receiptData: {random: 'data'},
-                processing: {
-                    duration: "2550",
-                    timestamp: new Date().toISOString()
-                }
+            data: responseData,
+            storage: {
+                receiptId: storedReceipt.id,
+                storedAt: storedReceipt.storedAt,
+                viewUrl: `/api/v1/receipts/${storedReceipt.id}`
             }
         });
 
@@ -99,9 +111,6 @@ export const uploadFile = async (req, res) => {
     }
 }
 
-/**
- * Get list of all stored images
- */
 export const getStoredImages = async (req, res) => {
     try {
         const uploadsDir = path.join(process.cwd(), 'uploads');
@@ -172,9 +181,6 @@ export const getStoredImages = async (req, res) => {
     }
 };
 
-/**
- * Serve individual image file
- */
 export const getImageFile = async (req, res) => {
     try {
         const { filename } = req.params;
