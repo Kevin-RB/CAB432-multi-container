@@ -1,0 +1,60 @@
+name: receipt-app
+
+services:
+  api:
+    image: 901444280953.dkr.ecr.ap-southeast-2.amazonaws.com/n12112798-kr-m5:api-v1.2.4
+    ports:
+      - "3000:3000"
+    environment:
+      - PORT=3000
+    networks:
+      - app-net
+    depends_on:
+      - ollama
+      - tesseract
+
+  tesseract:
+    image: 901444280953.dkr.ecr.ap-southeast-2.amazonaws.com/n12112798-kr-m5:tesseract-v1.0
+    networks:
+      - app-net
+    healthcheck:
+      test: ["CMD", "tesseract --version"]
+      interval: 1m
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama:/root/.ollama
+    networks:
+      - app-net
+    depends_on:
+      ollama-init:
+        condition: service_completed_successfully
+
+  ollama-init:
+    image: ollama/ollama:latest
+    container_name: ollama-init
+    volumes:
+      - ollama:/root/.ollama
+    networks:
+      - app-net
+    entrypoint: >
+      sh -c "
+      ollama serve &
+      sleep 10 &&
+      ollama pull deepseek-r1:1.5b &&
+      pkill ollama
+      "
+    restart: "no"
+
+networks:
+  app-net:
+
+volumes:
+  ollama:
