@@ -1,9 +1,9 @@
 import express from 'express';
-import { handleUploadError } from './middleware/upload.js';
 import healthRoutes from './routes/v1/health.js';
 import uploadRoutes from './routes/v1/upload.js';
 import ollamaRoutes from './routes/v1/ollama-routes.js';
 import config from './config/index.js';
+import { handleUploadError } from './services/multer.js';
 
 const app = express();
 
@@ -11,9 +11,9 @@ const app = express();
 app.use(express.json());
 
 // V1 routes
-app.use('/v1/health', healthRoutes);
-app.use('/v1/upload', uploadRoutes);
-app.use('/v1/ollama', ollamaRoutes);
+app.use('/api/v1/health', healthRoutes);
+app.use('/api/v1/upload', uploadRoutes);
+app.use('/api/v1/ollama', ollamaRoutes);
 
 // Error handling middleware for multer
 app.use(handleUploadError);
