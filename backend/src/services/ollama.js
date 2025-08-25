@@ -1,29 +1,15 @@
 import { Ollama } from 'ollama'
 import os from 'os';
-import { z } from 'zod';
+import config from '../config/index.js';
+import { receiptJSONschema } from '../models/receipt.js';
 
-const ollama = new Ollama({ host: 'http://ollama:11434' })
+const ollama = new Ollama({ host: config.services.ollama.baseUrl })
 
 export default ollama
 
-// Zod schema for receipt parsing
-const receiptSchema = z.object({
-    store_name: z.string().nullish(),
-    items: z.array(z.object({
-        item_name: z.string().nullish(),
-        quantity: z.number().default(1).nullish(),
-        price_per_unit: z.number().nullish(),
-        total: z.number().nullish()
-    })),
-    subtotal: z.number().nullish()
-});
-
 export const extractReceiptInfo = (receiptPlainText) => {
     const deterministicOptions = {
-        temperature: 0,
-        top_k: 1,           // Only most likely word
-        top_p: 1.0,         // But allow full probability space
-        repeat_penalty: 1.1,  // Light penalty to avoid repeating prices in item names
+        ...config.ollama.options,
         num_thread: os.cpus().length,
     };
 
@@ -46,20 +32,6 @@ export const extractReceiptInfo = (receiptPlainText) => {
 
                 Return null for any field you cannot determine confidently.
 
-                REQUIRED OUTPUT FORMAT (follow exactly):
-                    {
-                    "store_name": "store name or null",
-                    "items": [
-                        {
-                        "name": "clean item name",
-                        "quantity": 1.5,
-                        "price_per_unit": 3.99,
-                        "total": 5.99
-                        }
-                    ],
-                    "subtotal": 123.45
-                    }
-
                 RULES:
                 - Only return the JSON object above, nothing else
                 - Do NOT add extra fields like store_address, zip_code, etc.
@@ -72,9 +44,9 @@ export const extractReceiptInfo = (receiptPlainText) => {
                 ${receiptPlainText}
 
                 Extract the data as JSON:`,
-        model: 'deepseek-r1:1.5b',
+        model: config.ollama.model,
         stream: false,
-        format: receiptSchema,
+        format: receiptJSONschema,
         options: deterministicOptions
     })
 

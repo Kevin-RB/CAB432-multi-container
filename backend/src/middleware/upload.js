@@ -1,4 +1,5 @@
 import multer from 'multer'
+import config from '../config/index.js';
 
 // Configure multer to store files in memory (not on disk)
 const storage = multer.memoryStorage();
@@ -6,23 +7,14 @@ const storage = multer.memoryStorage();
 export const upload = multer({
   storage: storage,
   limits: {
-    fileSize: 10 * 1024 * 1024, // 10MB limit
+    fileSize: config.upload.maxFileSize,
   },
   fileFilter: (req, file, cb) => {
-    // Accept only images and PDFs
-    const allowedTypes = [
-      'image/jpeg',
-      'image/jpg',
-      'image/png',
-      'image/gif',
-      'image/webp',
-      'application/pdf'
-    ];
-    
-    if (allowedTypes.includes(file.mimetype)) {
+    // Accept only configured file types
+    if (config.upload.allowedMimeTypes.includes(file.mimetype)) {
       cb(null, true);
     } else {
-      cb(new Error('Invalid file type. Only images (JPEG, PNG, GIF, WebP) and PDF files are allowed.'));
+      cb(new Error(`Invalid file type. Only ${config.upload.allowedMimeTypes.join(', ')} files are allowed.`));
     }
   }
 });
@@ -33,11 +25,11 @@ export const handleUploadError = (error, req, res, next) => {
     if (error.code === 'LIMIT_FILE_SIZE') {
       return res.status(400).json({
         error: 'File too large',
-        message: 'File size must be less than 10MB'
+        message: `File size must be less than ${config.upload.maxFileSize / (1024 * 1024)}MB`
       });
     }
   }
-  
+
   if (error.message.includes('Invalid file type')) {
     return res.status(400).json({
       error: 'Invalid file type',

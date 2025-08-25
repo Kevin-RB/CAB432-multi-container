@@ -1,23 +1,26 @@
 import express from 'express';
 import { handleUploadError } from './middleware/upload.js';
-import uploadRoutes from './routes/index.js';
-import ollamaRoutes from './routes/ollama-routes.js';
+import healthRoutes from './routes/v1/health.js';
+import uploadRoutes from './routes/v1/upload.js';
+import ollamaRoutes from './routes/v1/ollama-routes.js';
+import config from './config/index.js';
 
 const app = express();
-const PORT = process.env.PORT || 3000;
 
 // Middleware
 app.use(express.json());
 
-// Routes
-app.use('/', uploadRoutes);
-app.use('/ollama', ollamaRoutes);
+// V1 routes
+app.use('/v1/health', healthRoutes);
+app.use('/v1/upload', uploadRoutes);
+app.use('/v1/ollama', ollamaRoutes);
 
 // Error handling middleware for multer
 app.use(handleUploadError);
 
 // Start the server
-app.listen(PORT, () => {
-  console.log(`🚀 Server is running on http://localhost:${PORT}`);
-  console.log(`📁 Upload endpoint: POST http://localhost:${PORT}/upload`);
+app.listen(config.port, () => {
+  console.log(`🚀 Server is running on http://localhost:${config.port}`);
+  console.log(`📁 Upload endpoint: POST http://localhost:${config.port}/upload`);
+  console.log(`🔍 Health check: GET http://localhost:${config.port}/`);
 });
