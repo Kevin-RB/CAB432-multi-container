@@ -31,7 +31,7 @@ export const extractReceiptInfo = (receiptPlainText) => {
         prompt: `Parse this receipt OCR text and extract structured information. Clean up the data carefully.
 
                 EXTRACTION RULES:
-                - store_name: Extract the store/business name only
+                - store_name: Extract the store/business name only. leave the field as empty string if not found
                 - For each item:
                 * item_name: Clean item name (remove prices, barcodes, codes, extra numbers)
                 * quantity: Extract quantity/weight, set to 1 if not clear, null if completely unclear
@@ -72,7 +72,7 @@ export const extractReceiptInfo = (receiptPlainText) => {
                 ${receiptPlainText}
 
                 Extract the data as JSON:`,
-        model: 'gemma3:1b',
+        model: 'deepseek-r1:1.5b',
         stream: false,
         format: receiptSchema,
         options: deterministicOptions

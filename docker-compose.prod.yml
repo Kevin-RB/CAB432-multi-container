@@ -2,7 +2,7 @@ name: receipt-app
 
 services:
   api:
-    image: ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/n12112798-kr-m5:api-v1.2
+    image: 901444280953.dkr.ecr.ap-southeast-2.amazonaws.com/n12112798-kr-m5:api-v1.2.4
     ports:
       - "3000:3000"
     environment:
@@ -14,7 +14,7 @@ services:
       - tesseract
 
   tesseract:
-    image: ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/n12112798-kr-m5:tesseract-v1.0
+    image: 901444280953.dkr.ecr.ap-southeast-2.amazonaws.com/n12112798-kr-m5:tesseract-v1.0
     networks:
       - app-net
     healthcheck:
@@ -48,7 +48,7 @@ services:
       sh -c "
       ollama serve &
       sleep 10 &&
-      ollama pull gemma3:1b &&
+      ollama pull deepseek-r1:1.5b &&
       pkill ollama
       "
     restart: "no"
