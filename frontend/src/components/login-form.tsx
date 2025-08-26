@@ -29,10 +29,12 @@ export function LoginForm({
     }
   };
 
+  console.log(loginMutation.error)
+  console.log(loginMutation.data)
   return (
     <form className={cn("flex flex-col gap-6", className)} {...props} onSubmit={handleSubmit(onSubmit)}>
       <div className="flex flex-col items-center gap-2 text-center">
-        <h1 className="text-2xl font-bold">Login to your account gay supreme</h1>
+        <h1 className="text-2xl font-bold">Login to your account gay supreme extreme</h1>
         <p className="text-muted-foreground text-sm text-balance">
           Enter your email below to login to your account
         </p>

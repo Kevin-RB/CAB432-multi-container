@@ -2,7 +2,7 @@ import axios from 'axios';
 
 // Create axios instance with base configuration
 const api = axios.create({
-  baseURL: 'http://api/v1',
+  baseURL: 'http://localhost:3000/api/v1',
   headers: {
     'Content-Type': 'application/json',
   },
@@ -32,7 +32,9 @@ api.interceptors.response.use(
     if (error.response?.status === 401) {
       // Handle unauthorized access (redirect to login, clear token, etc.)
       localStorage.removeItem('token');
-      window.location.href = '/login';
+      if (window.location.pathname !== '/') {
+        window.location.href = '/';
+      }
     }
     return Promise.reject(error);
   }

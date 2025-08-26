@@ -5,12 +5,15 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm ci
 
-# Copy source and build
+# Copy source code
 COPY . .
-RUN npm run build
+# RUN npm run build
 
 # Expose port
 EXPOSE 3000
 
-# Use your serve script (vite preview)
-CMD ["npm", "run", "serve", "--", "--host", "0.0.0.0", "--port", "3000"]
+# Serve for production build
+# CMD ["npm", "run", "serve", "--", "--host", "0.0.0.0", "--port", "3000"]
+
+# Use development server with hot reload
+CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0", "--port", "3000"]
