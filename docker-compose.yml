@@ -1,6 +1,24 @@
 name: receipt-app
 
 services:
+  frontend:
+    build:
+      context: ./CAB-frontend
+      dockerfile: Dockerfile
+    ports:
+      - "3001:3000"
+    depends_on:
+      - api
+    develop:
+      watch:
+        - action: sync
+          path: ./CAB-frontend
+          target: /usr/src/app
+          ignore:
+            - node_modules/
+        - action: rebuild
+          path: package.json
+
   api:
     build: 
       context: ./backend
