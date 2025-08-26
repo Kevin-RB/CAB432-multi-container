@@ -7,7 +7,7 @@ export const Route = createFileRoute('/')({
 
 function App() {
   return (
-    <div className="text-center">
+    <div className="text-center w-full">
       <header className="min-h-screen flex flex-col items-center justify-center bg-[#282c34] text-white text-[calc(10px+2vmin)]">
         <img
           src={logo}
@@ -15,7 +15,7 @@ function App() {
           alt="logo"
         />
         <p>
-          Hellooo! from vite + react + tanstack router
+          Edit <code>src/routes/index.tsx</code> and save to reload.
         </p>
         <a
           className="text-[#61dafb] hover:underline"
