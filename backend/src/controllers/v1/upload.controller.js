@@ -42,7 +42,24 @@ export const uploadFile = async (req, res) => {
         const responseData = {
             fileInfo,
             ocrResult: ocrResponse.data,
-            receiptData: {random: 'data'},
+            receiptData: {
+                store_name: "woolworths",
+                items: [
+                    {
+                        item_name: "banana",
+                        quantity: 2,
+                        price_per_unit: 0.5,
+                        total: 1
+                    },
+                    {
+                        item_name: "apple",
+                        quantity: 1,
+                        price_per_unit: 0.8,
+                        total: 0.8
+                    }
+                ],
+                subtotal: 200
+            },
             processing: {
                 duration: "2550",
                 timestamp: new Date().toISOString()
@@ -82,17 +99,28 @@ export const uploadFile = async (req, res) => {
             throw new Error(`LLM response validation failed: ${validation.error}`);
         }
 
+        // const responseData = {
+        //     fileInfo,
+        //     ocrResult: ocrResponse.data,
+        //     receiptData: validation.data,
+        //     processing: {
+        //         duration: llmResponse.total_duration,
+        //         timestamp: new Date().toISOString()
+        //     }
+        // };
+
+        // const storedReceipt = addToStorage({
+        //     data: responseData
+        // });
+
         res.json({
             success: true,
             message: 'File uploaded and processed successfully',
-            data: {
-                fileInfo,
-                ocrResult: ocrResponse.data,
-                receiptData: validation.data,
-                processing: {
-                    duration: llmResponse.total_duration,
-                    timestamp: new Date().toISOString()
-                }
+            data: responseData,
+            storage: {
+                receiptId: storedReceipt.id,
+                storedAt: storedReceipt.storedAt,
+                viewUrl: `/api/v1/receipts/${storedReceipt.id}`
             }
         });
 
@@ -101,7 +129,7 @@ export const uploadFile = async (req, res) => {
         if (req.file && req.file.path) {
             cleanupFile(req.file.path);
         }
-
+        console.error('Error processing file upload or OCR:', error);
         res.status(500).json({
             success: false,
             error: 'Internal server error',
@@ -114,7 +142,7 @@ export const uploadFile = async (req, res) => {
 export const getStoredImages = async (req, res) => {
     try {
         const uploadsDir = path.join(process.cwd(), 'uploads');
-        
+
         // Check if uploads directory exists
         if (!fs.existsSync(uploadsDir)) {
             return res.json({
@@ -129,7 +157,7 @@ export const getStoredImages = async (req, res) => {
 
         // Read all files from uploads directory
         const files = fs.readdirSync(uploadsDir);
-        
+
         // Filter only image files based on allowed MIME types
         const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif'];
         const imageFiles = files.filter(file => {
@@ -141,11 +169,11 @@ export const getStoredImages = async (req, res) => {
         const images = imageFiles.map(filename => {
             const filePath = path.join(uploadsDir, filename);
             const stats = fs.statSync(filePath);
-            
+
             // Extract timestamp from filename (assuming format: timestamp-originalname)
             const timestampMatch = filename.match(/^(\d+)-/);
             const timestamp = timestampMatch ? parseInt(timestampMatch[1]) : stats.birthtimeMs;
-            
+
             return {
                 filename,
                 originalName: filename.replace(/^\d+-/, ''), // Remove timestamp prefix
@@ -184,7 +212,7 @@ export const getStoredImages = async (req, res) => {
 export const getImageFile = async (req, res) => {
     try {
         const { filename } = req.params;
-        
+
         if (!filename) {
             return res.status(400).json({
                 success: false,
@@ -208,7 +236,7 @@ export const getImageFile = async (req, res) => {
         // Verify it's an image file
         const ext = path.extname(filename).toLowerCase();
         const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif'];
-        
+
         if (!imageExtensions.includes(ext)) {
             return res.status(400).json({
                 success: false,
@@ -226,16 +254,16 @@ export const getImageFile = async (req, res) => {
         };
 
         const mimeType = mimeTypes[ext] || 'application/octet-stream';
-        
+
         // Get file stats for headers
         const stats = fs.statSync(filePath);
-        
+
         // Set appropriate headers
         res.setHeader('Content-Type', mimeType);
         res.setHeader('Content-Length', stats.size);
         res.setHeader('Content-Disposition', `inline; filename="${filename}"`);
         res.setHeader('Cache-Control', 'public, max-age=3600'); // Cache for 1 hour
-        
+
         // Stream the file
         const fileStream = fs.createReadStream(filePath);
         fileStream.pipe(res);

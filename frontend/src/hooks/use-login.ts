@@ -14,7 +14,7 @@ return useMutation({
     onSuccess: (data) => {
       // Handle successful login
       console.log("Login successful:");
-      localStorage.setItem("token", data.token);
+      localStorage.setItem("token", data.authToken);
       navigate({to: '/app'});
     },
     onError: (error) => {

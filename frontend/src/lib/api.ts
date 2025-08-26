@@ -13,6 +13,7 @@ const api = axios.create({
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token');
+    console.log("Token from localStorage:", token);
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -24,20 +25,20 @@ api.interceptors.request.use(
 );
 
 // Response interceptor to handle errors globally
-api.interceptors.response.use(
-  (response) => {
-    return response;
-  },
-  (error) => {
-    if (error.response?.status === 401) {
-      // Handle unauthorized access (redirect to login, clear token, etc.)
-      localStorage.removeItem('token');
-      if (window.location.pathname !== '/') {
-        window.location.href = '/';
-      }
-    }
-    return Promise.reject(error);
-  }
-);
+// api.interceptors.response.use(
+//   (response) => {
+//     return response;
+//   },
+//   (error) => {
+//     if (error.response?.status === 401) {
+//       // Handle unauthorized access (redirect to login, clear token, etc.)
+//       localStorage.removeItem('token');
+//       if (window.location.pathname !== '/') {
+//         window.location.href = '/';
+//       }
+//     }
+//     return Promise.reject(error);
+//   }
+// );
 
 export default api;

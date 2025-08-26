@@ -45,7 +45,7 @@ export function AppSidebar() {
     <Sidebar collapsible="icon">
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>Receipt Scan</SidebarGroupLabel>
+          <SidebarGroupLabel>Cosmic Receipt</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {items.map((item) => (
