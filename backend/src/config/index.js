@@ -1,3 +1,5 @@
+import { secret } from "../utils/jwt-utils.js";
+
 export const config = {
   port: process.env.PORT || 3000,
   
@@ -28,6 +30,11 @@ export const config = {
       top_p: 1.0,
       repeat_penalty: 1.1
     }
+  },
+
+  jwt: {
+    secret: process.env.JWT_SECRET || secret,
+    expiresIn: '30m'
   }
 };
 
