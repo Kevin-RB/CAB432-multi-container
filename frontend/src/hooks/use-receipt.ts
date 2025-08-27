@@ -1,5 +1,5 @@
-import type { ReceiptSummary } from "@/components/summaries/columns"
 import api from "@/lib/api";
+import type { ReceiptProcessSchema } from "@/schemas/receipt";
 import { useQuery } from "@tanstack/react-query"
 
 async function fetchReceiptData() {
@@ -8,10 +8,23 @@ async function fetchReceiptData() {
     return response.data.data.receipts;
 }
 
+export async function fetchReceipt(receiptId: string) {
+    const response = await api.get(`/receipt/${receiptId}`);
+    return response.data.data.receipt;
+}
+
 export const useReceipt = () => {
-    return useQuery<ReceiptSummary[]>({
+    return useQuery<ReceiptProcessSchema[]>({
         queryKey: ['receipts'],
         queryFn: fetchReceiptData,
-        staleTime: Infinity
+        staleTime: Infinity,
+    })
+}
+
+export const useReceiptById = (receiptId: string) => {
+    return useQuery<ReceiptProcessSchema>({
+        queryKey: ['receipt', receiptId],
+        queryFn: () => fetchReceipt(receiptId),
+        staleTime: Infinity,
     })
 }

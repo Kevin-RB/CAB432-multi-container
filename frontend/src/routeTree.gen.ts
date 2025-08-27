@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as AppRouteRouteImport } from './routes/app/route'
 import { Route as AppIndexRouteImport } from './routes/app/index'
 import { Route as loginIndexRouteImport } from './routes/(login)/index'
+import { Route as AppReceiptReceiptIdRouteImport } from './routes/app/receipt/$receiptId'
 
 const AppRouteRoute = AppRouteRouteImport.update({
   id: '/app',
@@ -28,28 +29,36 @@ const loginIndexRoute = loginIndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AppReceiptReceiptIdRoute = AppReceiptReceiptIdRouteImport.update({
+  id: '/receipt/$receiptId',
+  path: '/receipt/$receiptId',
+  getParentRoute: () => AppRouteRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/app': typeof AppRouteRouteWithChildren
   '/': typeof loginIndexRoute
   '/app/': typeof AppIndexRoute
+  '/app/receipt/$receiptId': typeof AppReceiptReceiptIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof loginIndexRoute
   '/app': typeof AppIndexRoute
+  '/app/receipt/$receiptId': typeof AppReceiptReceiptIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/app': typeof AppRouteRouteWithChildren
   '/(login)/': typeof loginIndexRoute
   '/app/': typeof AppIndexRoute
+  '/app/receipt/$receiptId': typeof AppReceiptReceiptIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/app' | '/' | '/app/'
+  fullPaths: '/app' | '/' | '/app/' | '/app/receipt/$receiptId'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/app'
-  id: '__root__' | '/app' | '/(login)/' | '/app/'
+  to: '/' | '/app' | '/app/receipt/$receiptId'
+  id: '__root__' | '/app' | '/(login)/' | '/app/' | '/app/receipt/$receiptId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -80,15 +89,24 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof loginIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/app/receipt/$receiptId': {
+      id: '/app/receipt/$receiptId'
+      path: '/receipt/$receiptId'
+      fullPath: '/app/receipt/$receiptId'
+      preLoaderRoute: typeof AppReceiptReceiptIdRouteImport
+      parentRoute: typeof AppRouteRoute
+    }
   }
 }
 
 interface AppRouteRouteChildren {
   AppIndexRoute: typeof AppIndexRoute
+  AppReceiptReceiptIdRoute: typeof AppReceiptReceiptIdRoute
 }
 
 const AppRouteRouteChildren: AppRouteRouteChildren = {
   AppIndexRoute: AppIndexRoute,
+  AppReceiptReceiptIdRoute: AppReceiptReceiptIdRoute,
 }
 
 const AppRouteRouteWithChildren = AppRouteRoute._addFileChildren(
