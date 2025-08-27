@@ -7,13 +7,15 @@ RUN npm ci
 
 # Copy source code
 COPY . .
-# RUN npm run build
+
+# Build for production
+RUN npm run build
+
+# Install serve globally for serving static files
+RUN npm install -g serve
 
 # Expose port
 EXPOSE 3000
 
-# Serve for production build
-# CMD ["npm", "run", "serve", "--", "--host", "0.0.0.0", "--port", "3000"]
-
-# Use development server with hot reload
-CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0", "--port", "3000"]
+# Serve the production build
+CMD ["serve", "-s", "dist", "-l", "3000"]

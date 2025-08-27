@@ -10,7 +10,11 @@
     "test": "vitest run",
     "lint": "eslint",
     "format": "prettier",
-    "check": "prettier --write . && eslint --fix"
+    "check": "prettier --write . && eslint --fix",
+    "docker:dev": "docker build -f Dockerfile.dev -t frontend-dev .",
+    "docker:prod": "docker build -f Dockerfile -t frontend-prod .",
+    "docker:push": "docker tag frontend-prod 901444280953.dkr.ecr.ap-southeast-2.amazonaws.com/n12112798-kr-m5:frontend-v1.0.2 && docker push 901444280953.dkr.ecr.ap-southeast-2.amazonaws.com/n12112798-kr-m5:frontend-v1.0.2",
+    "docker:build-push": "npm run docker:prod && npm run docker:push"
   },
   "dependencies": {
     "@faker-js/faker": "^9.6.0",
