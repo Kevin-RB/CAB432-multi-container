@@ -1,7 +1,7 @@
 import axios from 'axios';
-import { extractReceiptInfo } from '../../services/ollama.js';
+import { extractReceiptInfo, generateRecipeSuggestions } from '../../services/ollama.js';
 import config from '../../config/index.js';
-import { receiptSchema } from '../../models/receipt.js';
+import { receiptSchema, recipeSchema } from '../../models/receipt.js';
 import { getFileInfo, readFileBuffer, cleanupFile } from '../../services/multer.js';
 import { addToStorage } from './receipts.controller.js';
 import fs from 'fs';
@@ -39,79 +39,101 @@ export const uploadFile = async (req, res) => {
         console.log('OCR completed, sending text for LLM extraction');
 
         // EARLY RETURN FOR TESTING
-        const responseData = {
-            fileInfo,
-            ocrResult: ocrResponse.data,
-            receiptData: {
-                store_name: "woolworths",
-                items: [
-                    {
-                        item_name: "banana",
-                        quantity: 2,
-                        price_per_unit: 0.5,
-                        total: 1
-                    },
-                    {
-                        item_name: "apple",
-                        quantity: 1,
-                        price_per_unit: 0.8,
-                        total: 0.8
-                    }
-                ],
-                subtotal: 200
-            },
-            processing: {
-                duration: "2550",
-                timestamp: new Date().toISOString()
-            }
-        };
+        // const responseData = {
+        //     fileInfo,
+        //     ocrResult: ocrResponse.data,
+        //     receiptData: {
+        //         store_name: "woolworths",
+        //         items: [
+        //             {
+        //                 item_name: "banana",
+        //                 quantity: 2,
+        //                 price_per_unit: 0.5,
+        //                 total: 1
+        //             },
+        //             {
+        //                 item_name: "apple",
+        //                 quantity: 1,
+        //                 price_per_unit: 0.8,
+        //                 total: 0.8
+        //             }
+        //         ],
+        //         subtotal: 200
+        //     },
+        //     processing: {
+        //         duration: "2550",
+        //         timestamp: new Date().toISOString()
+        //     }
+        // };
 
         // Store the processed data
-        const storedReceipt = addToStorage({
-            data: responseData
-        });
+        // const storedReceipt = addToStorage({
+        //     data: responseData
+        // });
 
-        res.json({
-            success: true,
-            message: 'File uploaded and processed successfully',
-            data: responseData,
-            storage: {
-                receiptId: storedReceipt.id,
-                storedAt: storedReceipt.storedAt,
-                viewUrl: `/api/v1/receipts/${storedReceipt.id}`
-            }
-        });
+        // res.json({
+        //     success: true,
+        //     message: 'File uploaded and processed successfully',
+        //     data: responseData,
+        //     storage: {
+        //         receiptId: storedReceipt.id,
+        //         storedAt: storedReceipt.storedAt,
+        //         viewUrl: `/api/v1/receipts/${storedReceipt.id}`
+        //     }
+        // });
 
-        return;
+        // return;
 
         // Extract receipt information using LLM
-        const llmResponse = await extractReceiptInfo(ocrResponse.data.text);
-        console.log('LLM Response:', llmResponse);
+        const llmLLMJsonParse = await extractReceiptInfo(ocrResponse.data.text);
+        console.log('LLM Response:', llmLLMJsonParse);
 
         // Validate the LLM response
-        const parsedResponse = JSON.parse(llmResponse.response);
+        const parsedResponse = JSON.parse(llmLLMJsonParse.response);
         const validation = receiptSchema.safeParse(parsedResponse);
 
-        if (!validation.success) {
+        if (validation.error) {
             console.log(validation.error);
             // Clean up file on validation failure
             cleanupFile(file.path);
             throw new Error(`LLM response validation failed: ${validation.error}`);
         }
+        console.log('LLM extraction and validation successful');
+        console.log('Processing items for recipes');
 
-        // const responseData = {
-        //     fileInfo,
-        //     ocrResult: ocrResponse.data,
-        //     receiptData: validation.data,
-        //     processing: {
-        //         duration: llmResponse.total_duration,
-        //         timestamp: new Date().toISOString()
-        //     }
-        // };
+        const items = validation.data.items
+            .map(item => item.item_name)
+            .filter(name => name && name.trim().length > 0)
+            .join(', ');
 
-        // const storedReceipt = addToStorage({
-        //     data: responseData
-        // });
+        console.log('Extracted items for recipe generation:', items);
+
+        console.log('Generating recipes');
+        const llmRecipeSuggestions = await generateRecipeSuggestions(items);
+
+        const parsedSuggestions = JSON.parse(llmRecipeSuggestions.response);
+        const suggestionValidation = recipeSchema.safeParse(parsedSuggestions);
+
+        if (suggestionValidation.error) {
+            console.log(suggestionValidation.error);
+            // Clean up file on validation failure
+            cleanupFile(file.path);
+            throw new Error(`Recipe suggestion validation failed: ${suggestionValidation.error}`);
+        }
+
+        const responseData = {
+            fileInfo,
+            ocrResult: ocrResponse.data,
+            receiptData: { ...validation.data, recipes: suggestionValidation.data },
+            processing: {
+                duration: llmLLMJsonParse.total_duration + llmRecipeSuggestions.total_duration,
+                timestamp: new Date().toISOString()
+            }
+        };
+
+        const storedReceipt = addToStorage({
+            data: responseData
+        });
 
         res.json({
             success: true,
@@ -129,11 +151,11 @@ export const uploadFile = async (req, res) => {
         if (req.file && req.file.path) {
             cleanupFile(req.file.path);
         }
-        console.error('Error processing file upload or OCR:', error);
+        console.error('Error processing file:', error);
         res.status(500).json({
             success: false,
             error: 'Internal server error',
-            message: 'Failed to process file upload or OCR',
+            message: 'Failed to process file',
             details: process.env.NODE_ENV === 'development' ? error.message : undefined
         });
     }

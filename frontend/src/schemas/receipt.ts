@@ -16,8 +16,25 @@ const fileSchema = z
 export const receiptUploadSchema = z.object({
   "receipt-image": fileSchema,
 })
-
 export type ReceiptUploadSchema = z.infer<typeof receiptUploadSchema>
+
+
+export const receiptItemSchema = z.object({
+  item_name: z.string(),
+  quantity: z.number(),
+  price_per_unit: z.number(),
+  total: z.number()
+})
+export type ReceiptItemSchema = z.infer<typeof receiptItemSchema>
+
+
+export const receiptListSchema = z.object({
+  store_name: z.string(),
+  items: z.array(receiptItemSchema),
+  recipes: z.array(z.string()),
+  subtotal: z.number()
+})
+export type ReceiptListSchema = z.infer<typeof receiptListSchema>
 
 
 export const receiptProcessSchema = z.object({
@@ -37,16 +54,7 @@ export const receiptProcessSchema = z.object({
       text: z.string(),
       timestamp: z.number()
     }),
-    receiptData: z.object({
-      store_name: z.string(),
-      items: z.array(z.object({
-        item_name: z.string(),
-        quantity: z.number(),
-        price_per_unit: z.number(),
-        total: z.number()
-      })),
-      subtotal: z.number()
-    }),
+    receiptData: receiptListSchema,
     processing: z.object({
       duration: z.string(),
       timestamp: z.string()
@@ -56,21 +64,3 @@ export const receiptProcessSchema = z.object({
 })
 
 export type ReceiptProcessSchema = z.infer<typeof receiptProcessSchema>
-
-export const receiptItemSchema = z.object({
-  item_name: z.string(),
-  quantity: z.number(),
-  price_per_unit: z.number(),
-  total: z.number()
-})
-
-export type ReceiptItemSchema = z.infer<typeof receiptItemSchema>
-
-export const receiptListSchema = z.object({
-  storeName: z.string(),
-  items: z.array(receiptItemSchema),
-  subtotal: z.number()
-})
-
-export type ReceiptListSchema = z.infer<typeof receiptListSchema>
-
