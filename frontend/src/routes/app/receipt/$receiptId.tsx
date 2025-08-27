@@ -1,4 +1,5 @@
 import { ReceiptDetailTable } from '@/components/receipt-details/receipt-detail-table'
+import ReceiptImage from '@/components/receipt-details/receipt-image'
 import api from '@/lib/api'
 import type { ReceiptProcessSchema } from '@/schemas/receipt'
 import { createFileRoute } from '@tanstack/react-router'
@@ -24,6 +25,7 @@ function ReceiptComponent() {
             <h2 className="text-xl font-bold">Receipt Details</h2>
             <ReceiptDetailTable data={data.receiptData.items} />
             <span className="font-bold">Subtotal: {data.receiptData.subtotal}</span>
+            <ReceiptImage className='max-w-3xl mx-auto' imageId={data.fileInfo.savedAs} alt={data.fileInfo.originalName} />
         </section>
     )
 }
