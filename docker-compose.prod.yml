@@ -17,11 +17,12 @@ services:
       - app-net
     restart: unless-stopped
   frontend:
-    image: 901444280953.dkr.ecr.ap-southeast-2.amazonaws.com/n12112798-kr-m5:frontend-v1.0.2
+    image: ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/n12112798-kr-m5:frontend-v1.0.2
     # ports:
     #   - "80:3000"  # EC2:80 → Container:3000 (matches your Dockerfile)
     environment:
       - VITE_API_BASE_URL=/api
+      - VITE_YOUTUBE_API_KEY=${VITE_YOUTUBE_API_KEY}
     networks:
       - app-net
     depends_on:
@@ -29,7 +30,7 @@ services:
     restart: unless-stopped
 
   api:
-    image: 901444280953.dkr.ecr.ap-southeast-2.amazonaws.com/n12112798-kr-m5:api-prod-v1.0.0
+    image: ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/n12112798-kr-m5:api-prod-v1.0.0
     ports:
       - "3000:3000" # Direct external API access
     environment:
@@ -42,7 +43,7 @@ services:
     restart: unless-stopped
 
   tesseract:
-    image: 901444280953.dkr.ecr.ap-southeast-2.amazonaws.com/n12112798-kr-m5:tesseract-v1.0
+    image: ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/n12112798-kr-m5:tesseract-v1.0
     networks:
       - app-net
     healthcheck:
