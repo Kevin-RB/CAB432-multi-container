@@ -34,6 +34,6 @@ export const verifyAdmin = (req, res, next) => {
         next();
     } else {
         console.log(`Admin verification failed at URL ${req.url}`);
-        return res.sendStatus(403);
+        return res.sendStatus(401);
     }
 };

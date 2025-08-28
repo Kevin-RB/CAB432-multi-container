@@ -1,10 +1,18 @@
 import api from "@/lib/api";
-import type { ReceiptProcessSchema } from "@/schemas/receipt";
-import { useQuery } from "@tanstack/react-query"
+import type { PaginatedReceiptSchema, ReceiptProcessSchema } from "@/schemas/receipt";
+import { keepPreviousData, useQuery } from "@tanstack/react-query"
 
-async function fetchReceiptData() {
-    const response = await api.get('/receipt');
-    return response.data.data.receipts;
+async function fetchReceiptData(page: number) {
+    const response = await api.get<{
+        success: boolean;
+        message: string;
+        data: PaginatedReceiptSchema;
+    }>('/receipt', {
+        params: {
+            page
+        }
+    });
+    return response.data.data;
 }
 
 export async function fetchReceipt(receiptId: string) {
@@ -22,11 +30,11 @@ async function fetchReceiptImage(imageId: string) {
   return URL.createObjectURL(response.data);
 }
 
-export const useReceipt = () => {
-    return useQuery<ReceiptProcessSchema[]>({
-        queryKey: ['receipts'],
-        queryFn: fetchReceiptData,
-        staleTime: Infinity,
+export const useReceipt = ({page}: {page: number}) => {
+    return useQuery<PaginatedReceiptSchema>({
+        queryKey: ['receipts', page],
+        queryFn: () => fetchReceiptData(page),
+        placeholderData: keepPreviousData,
     })
 }
 
