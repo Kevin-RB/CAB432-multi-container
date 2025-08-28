@@ -89,7 +89,7 @@ services:
       sh -c "
       ollama serve &
       sleep 10 &&
-      ollama pull gemma3:1b &&
+      ollama pull deepseek-r1:1.5b &&
       pkill ollama
       "
     restart: "no"

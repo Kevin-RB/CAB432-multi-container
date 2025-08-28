@@ -17,7 +17,7 @@ services:
       - app-net
     restart: unless-stopped
   frontend:
-    image: ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/n12112798-kr-m5:frontend-v1.0.2
+    image: ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/n12112798-kr-m5:frontend-prod-v1.1.0
     # ports:
     #   - "80:3000"  # EC2:80 → Container:3000 (matches your Dockerfile)
     environment:
@@ -30,7 +30,7 @@ services:
     restart: unless-stopped
 
   api:
-    image: ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/n12112798-kr-m5:api-prod-v1.0.0
+    image: ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/n12112798-kr-m5:api-prod-v1.1.0
     ports:
       - "3000:3000" # Direct external API access
     environment:
@@ -79,7 +79,7 @@ services:
       sh -c "
       ollama serve &
       sleep 10 &&
-      ollama pull deepseek-r1:1.5b &&
+      ollama pull gemma3:1b &&
       pkill ollama
       "
     restart: "no"
