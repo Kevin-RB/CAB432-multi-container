@@ -2,7 +2,7 @@ import axios from 'axios';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ? `${import.meta.env.VITE_API_BASE_URL}/api/v1` : '/api/v1';
 
-// Create axios instance with base configuration
+// Create axios instance with base configuration for internal API
 const api = axios.create({
   baseURL: API_BASE_URL,
   headers: {
@@ -14,6 +14,7 @@ const api = axios.create({
 // Request interceptor to add auth token
 api.interceptors.request.use(
   (config) => {
+    // Add authorization header to all requests using this instance
     const token = localStorage.getItem('token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
@@ -41,5 +42,11 @@ api.interceptors.response.use(
     return Promise.reject(error);
   }
 );
+
+
+// Create a separate axios instance for external APIs (no auth interceptors)
+export const externalApi = axios.create({
+  timeout: 10000,
+});
 
 export default api;

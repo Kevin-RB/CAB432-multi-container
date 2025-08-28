@@ -68,6 +68,8 @@ export const generateRecipeSuggestions = (ingredients) => {
 
                 RULES:
                 - No need to use all ingredients for a recipe, be creative, suggest recipes taking as a base some of the ingredients in the list.
+                - Avoid using overly complex or rare ingredients.
+                - Avoid using item brands, make or specific product names.
                 - Suggest existing recipes that could be made with the ingredients.
                 - Return a JSON object with a single key "recipes".
                 - The value of "recipes" should be a list of strings, with each string being a recipe name.
