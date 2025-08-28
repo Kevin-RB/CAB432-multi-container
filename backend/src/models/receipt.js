@@ -9,10 +9,14 @@ const receiptSchema = z.object({
         price_per_unit: z.number().nullish(),
         total: z.number()
     })),
-    subtotal: z.number()
+    subtotal: z.number(),
 });
+
+const recipeSchema = z.array(z.string()).length(3);
 
 const receiptJSONschema = z.toJSONSchema(receiptSchema);
 
-export { receiptSchema, receiptJSONschema };
+const recipeJSONschema = z.toJSONSchema(recipeSchema);
+
+export { receiptSchema, receiptJSONschema, recipeSchema, recipeJSONschema };
 

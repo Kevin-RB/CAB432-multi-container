@@ -1,0 +1,111 @@
+# Dependencies
+**/node_modules/
+**/.npm
+**/npm-debug.log*
+**/yarn-debug.log*
+**/yarn-error.log*
+
+# Environment variables
+**/.env
+**/.env.local
+**/.env.*.local
+**/.env.prod
+
+# Build outputs
+**/dist/
+**/build/
+**/.next/
+**/.nuxt/
+
+# Logs
+logs
+*.log
+
+# Docker
+**/.dockerignore
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+.DS_Store?
+._*
+Thumbs.db
+
+# Service-specific ignores
+backend/uploads/
+**/coverage/
+**/.nyc_output
+
+# Docker volumes
+docker-volumes/
+
+# Runtime data
+**/pids
+**/*.pid
+**/*.seed
+**/*.pid.lock
+
+# Test coverage
+**/coverage/
+**/*.lcov
+
+# Dependency directories
+**/jspm_packages/
+
+# Optional caches
+**/.eslintcache
+**/.parcel-cache
+
+# Build outputs
+**/.cache
+**/.fusebox/
+
+# Serverless directories
+**/.serverless
+
+# Database files
+**/.dynamodb/
+
+# Port files
+**/.tern-port
+
+# Yarn
+**/.yarn-integrity
+
+# TanStack
+**/.tanstack/tmp/
+
+# Frontend specific
+CAB-frontend/dist/
+CAB-frontend/.vite/
+
+# Backend specific
+backend/uploads/
+backend/.env
+
+# Python cache (for tesseract service)
+**/__pycache__/
+**/*.pyc
+**/*.pyo
+**/*.pyd
+**/.Python
+
+# Jupyter Notebook
+**/.ipynb_checkpoints
+
+# pyenv
+**/.python-version
+
+# pytest
+**/.pytest_cache/
+
+# mypy
+**/.mypy_cache/
+**/.dmypy.json
+**/dmypy.json

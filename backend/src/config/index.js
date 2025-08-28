@@ -2,7 +2,7 @@ import { secret } from "../utils/jwt-utils.js";
 
 export const config = {
   port: process.env.PORT || 3000,
-  
+
   services: {
     ollama: {
       baseUrl: process.env.OLLAMA_URL || 'http://ollama:11434'
@@ -25,10 +25,17 @@ export const config = {
   ollama: {
     model: 'gemma3:1b',
     options: {
-      temperature: 0,
-      top_k: 1,
-      top_p: 1.0,
-      repeat_penalty: 1.1
+      deterministic: {
+        temperature: 0,
+        top_k: 1,
+        top_p: 1.0,
+        repeat_penalty: 1.1
+      },
+      creative: {
+        temperature: 0.7,
+        top_k: 40,
+        top_p: 0.9,
+      }
     }
   },
 

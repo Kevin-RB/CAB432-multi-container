@@ -1,0 +1,30 @@
+name: receipt-app-dev
+
+services:
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend/src:/app/src  # Hot reload
+    environment:
+      - VITE_API_BASE_URL=http://localhost:3001
+    networks:
+      - app-net
+
+  api:
+    build: ./backend
+    ports:
+      - "3001:3000"
+    environment:
+      - PORT=3000
+      - NODE_ENV=development
+    volumes:
+      - ./backend/src:/app/src  # Hot reload for API too
+    networks:
+      - app-net
+
+networks:
+  app-net:

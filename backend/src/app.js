@@ -7,8 +7,14 @@ import config from './config/index.js';
 import { handleUploadError } from './services/multer.js';
 import { authenticateToken, verifyAdmin } from './middleware/auth.js';
 import authRoutes from './routes/v1/auth.js';
+import cors from 'cors';
 
 const app = express();
+
+app.use(cors({
+  origin: true,
+  credentials: true
+}));
 
 // Middleware
 app.use(express.json());
@@ -28,7 +34,4 @@ app.use(handleUploadError);
 // Start the server
 app.listen(config.port, () => {
   console.log(`🚀 Server is running on http://localhost:${config.port}`);
-  console.log(`📁 Upload endpoint: POST http://localhost:${config.port}/api/v1/upload`);
-  console.log(`📈 Receipts endpoint: GET http://localhost:${config.port}/api/v1/receipts`);
-  console.log(`❤️ Health check: GET http://localhost:${config.port}/api/v1/health`);
 });

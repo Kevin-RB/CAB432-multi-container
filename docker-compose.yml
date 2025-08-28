@@ -1,6 +1,30 @@
 name: receipt-app
 
 services:
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
+    ports:
+      - "3001:3000"  # Using Node.js serve on port 3000
+    depends_on:
+      - api
+    environment:
+      - VITE_API_BASE_URL=http://localhost:3000
+    networks:
+      - app-net
+    develop:
+      watch:
+        - action: sync
+          path: ./frontend
+          target: /app
+          ignore:
+            - node_modules/
+            - dist/
+            - .git/
+        - action: rebuild
+          path: ./frontend/package.json
+
   api:
     build: 
       context: ./backend
@@ -65,7 +89,7 @@ services:
       sh -c "
       ollama serve &
       sleep 10 &&
-      ollama pull gemma3:1b &&
+      ollama pull deepseek-r1:1.5b &&
       pkill ollama
       "
     restart: "no"
