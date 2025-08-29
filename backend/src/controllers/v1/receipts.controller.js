@@ -1,7 +1,3 @@
-import { DUMMY_DATA } from "../../.data.test/dummy.js";
-
-// Simple in-memory storage for processed receipts
-// let receiptStorage = [DUMMY_DATA, DUMMY_DATA, DUMMY_DATA, DUMMY_DATA, DUMMY_DATA, DUMMY_DATA, DUMMY_DATA, DUMMY_DATA, DUMMY_DATA, DUMMY_DATA];
 let receiptStorage = [];
 
 /**
