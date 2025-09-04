@@ -64,3 +64,21 @@ export const receiptProcessSchema = z.object({
 })
 
 export type ReceiptProcessSchema = z.infer<typeof receiptProcessSchema>
+
+export const paginationSchema = z.object({
+    currentPage: z.number(),
+    totalPages: z.number(),
+    totalItems: z.number(),
+    itemsPerPage: z.number(),
+    hasNextPage: z.boolean(),
+    hasPreviousPage: z.boolean(),
+    nextPage: z.number().min(1).nullable(),
+    previousPage: z.number().min(1).nullable()
+})
+
+export const paginatedReceiptSchema = z.object({
+    receipts: z.array(receiptProcessSchema),
+    pagination: paginationSchema
+});
+
+export type PaginatedReceiptSchema = z.infer<typeof paginatedReceiptSchema>;

@@ -38,52 +38,6 @@ export const uploadFile = async (req, res) => {
 
         console.log('OCR completed, sending text for LLM extraction');
 
-        // EARLY RETURN FOR TESTING
-        // const responseData = {
-        //     fileInfo,
-        //     ocrResult: ocrResponse.data,
-        //     receiptData: {
-        //         store_name: "woolworths",
-        //         items: [
-        //             {
-        //                 item_name: "banana",
-        //                 quantity: 2,
-        //                 price_per_unit: 0.5,
-        //                 total: 1
-        //             },
-        //             {
-        //                 item_name: "apple",
-        //                 quantity: 1,
-        //                 price_per_unit: 0.8,
-        //                 total: 0.8
-        //             }
-        //         ],
-        //         subtotal: 200
-        //     },
-        //     processing: {
-        //         duration: "2550",
-        //         timestamp: new Date().toISOString()
-        //     }
-        // };
-
-        // Store the processed data
-        // const storedReceipt = addToStorage({
-        //     data: responseData
-        // });
-
-        // res.json({
-        //     success: true,
-        //     message: 'File uploaded and processed successfully',
-        //     data: responseData,
-        //     storage: {
-        //         receiptId: storedReceipt.id,
-        //         storedAt: storedReceipt.storedAt,
-        //         viewUrl: `/api/v1/receipts/${storedReceipt.id}`
-        //     }
-        // });
-
-        // return;
-
         // Extract receipt information using LLM
         const llmLLMJsonParse = await extractReceiptInfo(ocrResponse.data.text);
         console.log('LLM Response:', llmLLMJsonParse);

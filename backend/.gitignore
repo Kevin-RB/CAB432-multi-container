@@ -84,6 +84,7 @@ jspm_packages/
 *.swp
 *.swo
 *~
+.data.test/
 
 # OS files
 .DS_Store
