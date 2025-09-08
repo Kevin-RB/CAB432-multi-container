@@ -11,8 +11,10 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as AppRouteRouteImport } from './routes/app/route'
 import { Route as AppIndexRouteImport } from './routes/app/index'
-import { Route as loginIndexRouteImport } from './routes/(login)/index'
+import { Route as authIndexRouteImport } from './routes/(auth)/index'
+import { Route as authSignupIndexRouteImport } from './routes/(auth)/signup/index'
 import { Route as AppReceiptReceiptIdRouteImport } from './routes/app/receipt/$receiptId'
+import { Route as authSignupConfirmationRouteImport } from './routes/(auth)/signup/confirmation'
 
 const AppRouteRoute = AppRouteRouteImport.update({
   id: '/app',
@@ -24,9 +26,14 @@ const AppIndexRoute = AppIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AppRouteRoute,
 } as any)
-const loginIndexRoute = loginIndexRouteImport.update({
-  id: '/(login)/',
+const authIndexRoute = authIndexRouteImport.update({
+  id: '/(auth)/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const authSignupIndexRoute = authSignupIndexRouteImport.update({
+  id: '/(auth)/signup/',
+  path: '/signup/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AppReceiptReceiptIdRoute = AppReceiptReceiptIdRouteImport.update({
@@ -34,36 +41,67 @@ const AppReceiptReceiptIdRoute = AppReceiptReceiptIdRouteImport.update({
   path: '/receipt/$receiptId',
   getParentRoute: () => AppRouteRoute,
 } as any)
+const authSignupConfirmationRoute = authSignupConfirmationRouteImport.update({
+  id: '/(auth)/signup/confirmation',
+  path: '/signup/confirmation',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/app': typeof AppRouteRouteWithChildren
-  '/': typeof loginIndexRoute
+  '/': typeof authIndexRoute
   '/app/': typeof AppIndexRoute
+  '/signup/confirmation': typeof authSignupConfirmationRoute
   '/app/receipt/$receiptId': typeof AppReceiptReceiptIdRoute
+  '/signup': typeof authSignupIndexRoute
 }
 export interface FileRoutesByTo {
-  '/': typeof loginIndexRoute
+  '/': typeof authIndexRoute
   '/app': typeof AppIndexRoute
+  '/signup/confirmation': typeof authSignupConfirmationRoute
   '/app/receipt/$receiptId': typeof AppReceiptReceiptIdRoute
+  '/signup': typeof authSignupIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/app': typeof AppRouteRouteWithChildren
-  '/(login)/': typeof loginIndexRoute
+  '/(auth)/': typeof authIndexRoute
   '/app/': typeof AppIndexRoute
+  '/(auth)/signup/confirmation': typeof authSignupConfirmationRoute
   '/app/receipt/$receiptId': typeof AppReceiptReceiptIdRoute
+  '/(auth)/signup/': typeof authSignupIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/app' | '/' | '/app/' | '/app/receipt/$receiptId'
+  fullPaths:
+    | '/app'
+    | '/'
+    | '/app/'
+    | '/signup/confirmation'
+    | '/app/receipt/$receiptId'
+    | '/signup'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/app' | '/app/receipt/$receiptId'
-  id: '__root__' | '/app' | '/(login)/' | '/app/' | '/app/receipt/$receiptId'
+  to:
+    | '/'
+    | '/app'
+    | '/signup/confirmation'
+    | '/app/receipt/$receiptId'
+    | '/signup'
+  id:
+    | '__root__'
+    | '/app'
+    | '/(auth)/'
+    | '/app/'
+    | '/(auth)/signup/confirmation'
+    | '/app/receipt/$receiptId'
+    | '/(auth)/signup/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   AppRouteRoute: typeof AppRouteRouteWithChildren
-  loginIndexRoute: typeof loginIndexRoute
+  authIndexRoute: typeof authIndexRoute
+  authSignupConfirmationRoute: typeof authSignupConfirmationRoute
+  authSignupIndexRoute: typeof authSignupIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -82,11 +120,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppIndexRouteImport
       parentRoute: typeof AppRouteRoute
     }
-    '/(login)/': {
-      id: '/(login)/'
+    '/(auth)/': {
+      id: '/(auth)/'
       path: '/'
       fullPath: '/'
-      preLoaderRoute: typeof loginIndexRouteImport
+      preLoaderRoute: typeof authIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/(auth)/signup/': {
+      id: '/(auth)/signup/'
+      path: '/signup'
+      fullPath: '/signup'
+      preLoaderRoute: typeof authSignupIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/app/receipt/$receiptId': {
@@ -95,6 +140,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/app/receipt/$receiptId'
       preLoaderRoute: typeof AppReceiptReceiptIdRouteImport
       parentRoute: typeof AppRouteRoute
+    }
+    '/(auth)/signup/confirmation': {
+      id: '/(auth)/signup/confirmation'
+      path: '/signup/confirmation'
+      fullPath: '/signup/confirmation'
+      preLoaderRoute: typeof authSignupConfirmationRouteImport
+      parentRoute: typeof rootRouteImport
     }
   }
 }
@@ -115,7 +167,9 @@ const AppRouteRouteWithChildren = AppRouteRoute._addFileChildren(
 
 const rootRouteChildren: RootRouteChildren = {
   AppRouteRoute: AppRouteRouteWithChildren,
-  loginIndexRoute: loginIndexRoute,
+  authIndexRoute: authIndexRoute,
+  authSignupConfirmationRoute: authSignupConfirmationRoute,
+  authSignupIndexRoute: authSignupIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
