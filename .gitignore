@@ -21,9 +21,6 @@
 logs
 *.log
 
-# Docker
-**/.dockerignore
-
 # IDE files
 .vscode/
 .idea/

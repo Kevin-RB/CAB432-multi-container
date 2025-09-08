@@ -1,10 +1,18 @@
 import axios from 'axios';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ? `${import.meta.env.VITE_API_BASE_URL}/api/v1` : '/api/v1';
+const API_VERSION = '/api/v1';
+
+const getDomain = () => {
+  if (import.meta.env.VITE_API_BASE_URL) {
+    return import.meta.env.VITE_API_BASE_URL;
+  }
+  // Return current origin with port 3000 for API
+  return `${window.location.protocol}//${window.location.hostname}:3000`;
+}
 
 // Create axios instance with base configuration for internal API
 const api = axios.create({
-  baseURL: API_BASE_URL,
+  baseURL: `${getDomain()}${API_VERSION}`,
   headers: {
     'Content-Type': 'application/json',
   },
