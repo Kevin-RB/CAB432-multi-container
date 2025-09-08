@@ -1,7 +1,8 @@
 import { generateAccessToken } from "../../services/auth.js";
 import { users } from "../../utils/jwt-utils.js";
 import Cognito from "@aws-sdk/client-cognito-identity-provider"
-import crypto from "crypto";
+import { secretHash } from "../../utils/auth-utils.js";
+import { tr } from "zod/v4/locales";
 
 export const login = (req, res) => {
     console.log("Attempting login for user", req.body.username);
@@ -54,8 +55,29 @@ export const signup = async (req, res) => {
     }
 }
 
-const secretHash = (clientId, clientSecret, username) => {
-    const hasher = crypto.createHmac('sha256', clientSecret);
-    hasher.update(`${username}${clientId}`);
-    return hasher.digest('base64');
+export const confirmSignup = async (req, res) => {
+    if (!req.body.username || !req.body.code) {
+        console.log("Missing username or confirmation code");
+        return res.status(400).json({ error: "confirmation code is required" });
+    }
+
+    const clientId = process.env.AWS_CLIENT_ID;
+    const clientSecret = process.env.AWS_CLIENT_SECRET;
+
+    try {
+        const client = new Cognito.CognitoIdentityProviderClient({ region: process.env.AWS_REGION });
+        const command = new Cognito.ConfirmSignUpCommand({
+            ClientId: clientId,
+            SecretHash: secretHash(clientId, clientSecret, req.body.username),
+            Username: req.body.username,
+            ConfirmationCode: req.body.code,
+        });
+
+        const response = await client.send(command);
+        console.log(response);
+        res.json({ message: "User confirmed successfully", data: response });
+    } catch (error) {
+        console.error("Error confirming user:", error);
+        res.status(400).json({ error: error.message || "Confirmation failed" });
+    }
 }

@@ -15,5 +15,11 @@ export const signupSchema = loginSchema.extend({
   .regex(/[^A-Za-z0-9]/, "Password must contain at least one symbol") // at least one symbol
 })
 
+export const OTPConfirmationSchema = z.object({
+  pin: z.string().min(6, {
+    message: "Your one-time password must be 6 characters.",
+  }),
+})
+export type OTPConfirmationType = z.infer<typeof OTPConfirmationSchema>
 export type LoginSchema = z.infer<typeof loginSchema>
 export type SignupSchema = z.infer<typeof signupSchema>
