@@ -1,12 +1,11 @@
-import jwt from 'jsonwebtoken';
-import config from '../config/index.js';
+import { idVerifier } from '../services/auth.js';
 
 // Middleware to verify a token and respond with user information
-export const authenticateToken = (req, res, next) => {
+export const authenticateToken = async (req, res, next) => {
     // We are using Bearer auth.  The token is in the authorization header.
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1];
-
+    console.log("Authenticating token: ", token);
     if (!token) {
         console.log('JSON web token missing.');
         return res.sendStatus(401);
@@ -14,12 +13,22 @@ export const authenticateToken = (req, res, next) => {
 
     // Check that the token is valid
     try {
-        const user = jwt.verify(token, config.jwt.secret);
-        console.log(user)
-        console.log(`authToken verified for user: ${user.username} at URL ${req.url}`);
+        const response = await idVerifier.verify(token);
+        console.log("middleware: ", response);
 
+        const isEmailVerified = response.email_verified === true;
+        
+        if (!isEmailVerified) {
+            console.log('Email not verified for user:', response.username);
+            return res.status(403).json({ error: "Email not verified" });
+        }
         // Add user info to the request for the next handler
-        req.user = user;
+        req.user = {
+            username: response['cognito:username'],
+            email: response.email,
+            userId: response.sub,
+            admin: response['custom:admin'] === 'true' || false,
+        };
         next();
     } catch (err) {
         console.log(`JWT verification failed at URL ${req.url}`, err.name, err.message);
@@ -30,7 +39,7 @@ export const authenticateToken = (req, res, next) => {
 // Middleware to verify admin role
 export const verifyAdmin = (req, res, next) => {
     console.log(`Admin verification initiated for user:`, req.user);
-    if (req.user.user && req.user.user.admin) {
+    if (req.user && req.user.admin) {
         next();
     } else {
         console.log(`Admin verification failed at URL ${req.url}`);

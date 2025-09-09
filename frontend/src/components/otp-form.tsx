@@ -10,7 +10,6 @@ import {
     FormDescription,
     FormField,
     FormItem,
-    FormLabel,
     FormMessage,
 } from "@/components/ui/form"
 import { useForm, type SubmitHandler } from 'react-hook-form'
@@ -33,12 +32,16 @@ export function OTPForm() {
     })
 
     const onSubmit: SubmitHandler<OTPConfirmationType> = async (data) => {
-        const username = sessionStorage.getItem('pendingUsername');
+        const user = sessionStorage.getItem('pendingUser')
+        if (!user) {
+            throw new Error("Something went wrong. Please restart the signup process.");
+        }
         try {
+            const { username, email } = JSON.parse(user);
             if (!username) {
                 throw new Error("No pending username found in sessionStorage.");
             }
-            await confirmationMutation.mutateAsync({ username, code: data.pin });
+            await confirmationMutation.mutateAsync({ username, email, code: data.pin });
         } catch (error) {
             console.error("Error during OTP submission:", error);
         }
