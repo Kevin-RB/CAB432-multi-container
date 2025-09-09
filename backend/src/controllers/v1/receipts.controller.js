@@ -1,3 +1,5 @@
+import { listUserFilesFromS3 } from "../../services/s3-storage.js";
+
 let receiptStorage = [];
 
 /**
@@ -26,9 +28,7 @@ export const addToStorage = (receiptData) => {
  * @query {number} limit - Number of receipts per page (default: 3)
  * @returns {Object} - Paginated receipts data
  */
-
-
-export const getPaginatedReceipts = (req, res) => {
+export const getPaginatedReceipts = async (req, res) => {
     try {
         // Parse pagination parameters from query string
         const page = parseInt(req.query.page) || 1;
@@ -96,6 +96,7 @@ export const getPaginatedReceipts = (req, res) => {
  * @param {string} id - Receipt ID
  * @returns {Object} - The requested receipt or null if not found
  */
+
 export const getReceiptById = (req, res) => {
     try {
         const { id } = req.params;
@@ -128,32 +129,6 @@ export const getReceiptById = (req, res) => {
             success: false,
             error: 'Internal server error',
             message: 'Failed to retrieve receipt',
-            details: process.env.NODE_ENV === 'development' ? error.message : undefined
-        });
-    }
-};
-
-/**
- * Clear all stored receipts
- */
-export const clearStorage = (req, res) => {
-    try {
-        const previousCount = receiptStorage.length;
-        receiptStorage = [];
-
-        res.json({
-            success: true,
-            message: 'Successfully cleared receipt storage',
-            data: {
-                previousCount,
-                currentCount: 0
-            }
-        });
-    } catch (error) {
-        res.status(500).json({
-            success: false,
-            error: 'Internal server error',
-            message: 'Failed to clear storage',
             details: process.env.NODE_ENV === 'development' ? error.message : undefined
         });
     }

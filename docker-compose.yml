@@ -30,7 +30,7 @@ services:
     ports:
       - "3000:3000"
     env_file:
-      - ./backend/.env
+      - ./backend/.env.local
     environment:
       - PORT=3000
     networks:

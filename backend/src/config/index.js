@@ -2,7 +2,6 @@ import { secret } from "../utils/jwt-utils.js";
 
 export const config = {
   port: process.env.PORT || 3000,
-
   services: {
     ollama: {
       baseUrl: process.env.OLLAMA_URL || 'http://ollama:11434'
@@ -11,7 +10,6 @@ export const config = {
       baseUrl: process.env.TESSERACT_URL || 'http://tesseract:3001'
     }
   },
-
   upload: {
     maxFileSize: 10 * 1024 * 1024, // 10MB
     allowedMimeTypes: [
@@ -21,7 +19,6 @@ export const config = {
       'application/pdf'
     ]
   },
-
   ollama: {
     model: 'gemma3:1b',
     options: {
@@ -38,10 +35,13 @@ export const config = {
       }
     }
   },
-
   jwt: {
     secret: process.env.JWT_SECRET || secret,
     expiresIn: '30m'
+  },
+  aws:{
+    region: process.env.AWS_REGION,
+    s3BucketName: process.env.AWS_S3_BUCKET_NAME
   }
 };
 

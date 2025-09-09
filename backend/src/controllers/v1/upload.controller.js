@@ -2,40 +2,46 @@ import axios from 'axios';
 import { extractReceiptInfo, generateRecipeSuggestions } from '../../services/ollama.js';
 import config from '../../config/index.js';
 import { receiptSchema, recipeSchema } from '../../models/receipt.js';
-import { getFileInfo, readFileBuffer, cleanupFile } from '../../services/multer.js';
-import { addToStorage } from './receipts.controller.js';
 import fs from 'fs';
 import path from 'path';
+import { uploadFileToS3 } from '../../services/s3-storage.js';
 
 export const uploadFile = async (req, res) => {
     try {
-
         // Check if file was uploaded
-        if (!req.file) {
+        if (!req.file || !req.file.buffer) {
             return res.status(400).json({
                 error: 'No file uploaded',
                 message: 'Please select a file to upload'
             });
         }
 
-        const file = req.file;
+        const file = req.file
+        const { userId } = req.user
 
-        // File information
-        const fileInfo = getFileInfo(file);
+        const { key } = await uploadFileToS3(file, userId);
+        console.log('File uploaded to S3:', key);
 
-        // Read file from disk for OCR processing
-        const fileBuffer = readFileBuffer(file.path);
+        return res.json({
+            success: true,
+            message: 'File uploaded successfully to S3',
+            data: { key },
+            fileInfo: {
+                originalName: file.originalname,
+                mimeType: file.mimetype,
+                size: file.size
+            }
+        });
 
         // Send to Tesseract OCR service
         const formData = new FormData();
-        formData.append('image', new Blob([fileBuffer]), file.originalname);
+        formData.append('image', new Blob([file.buffer]));
 
         const ocrResponse = await axios.post(`${config.services.tesseract.baseUrl}/ocr`, formData);
 
         if (ocrResponse.status !== 200) {
             throw new Error(`OCR service error: ${ocrResponse.statusText}`);
         }
-
         console.log('OCR completed, sending text for LLM extraction');
 
         // Extract receipt information using LLM
@@ -48,13 +54,11 @@ export const uploadFile = async (req, res) => {
 
         if (validation.error) {
             console.log(validation.error);
-            // Clean up file on validation failure
-            cleanupFile(file.path);
             throw new Error(`LLM response validation failed: ${validation.error}`);
         }
         console.log('LLM extraction and validation successful');
-        console.log('Processing items for recipes');
 
+        console.log('Processing items for recipes');
         const items = validation.data.items
             .map(item => item.item_name)
             .filter(name => name && name.trim().length > 0)
@@ -70,8 +74,6 @@ export const uploadFile = async (req, res) => {
 
         if (suggestionValidation.error) {
             console.log(suggestionValidation.error);
-            // Clean up file on validation failure
-            cleanupFile(file.path);
             throw new Error(`Recipe suggestion validation failed: ${suggestionValidation.error}`);
         }
 
@@ -85,18 +87,19 @@ export const uploadFile = async (req, res) => {
             }
         };
 
-        const storedReceipt = addToStorage({
-            data: responseData
-        });
+        // const storedReceipt = addToStorage({
+        //     data: responseData
+        // });
 
         res.json({
             success: true,
             message: 'File uploaded and processed successfully',
             data: responseData,
             storage: {
-                receiptId: storedReceipt.id,
-                storedAt: storedReceipt.storedAt,
-                viewUrl: `/api/v1/receipts/${storedReceipt.id}`
+                test: "test content"
+                //     receiptId: storedReceipt.id,
+                //     storedAt: storedReceipt.storedAt,
+                //     viewUrl: `/api/v1/receipts/${storedReceipt.id}`
             }
         });
 
