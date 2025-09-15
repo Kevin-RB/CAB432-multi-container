@@ -2,23 +2,7 @@ import { S3Client, PutObjectCommand, GetObjectCommand, ListObjectsV2Command } fr
 import config from '../config/index.js';
 import { v4 as uuidv4 } from 'uuid'
 
-function getCredentials() {
-    if (process.env.AWS_ACCESS_KEY_ID
-        && process.env.AWS_SECRET_ACCESS_KEY
-        && process.env.AWS_SESSION_TOKEN) {
-        return {
-            accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-            secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-            sessionToken: process.env.AWS_SESSION_TOKEN
-        }
-    }
-    return undefined; // Use IAM role if no explicit credentials
-}
-
-const s3Client = new S3Client({
-    region: config.aws.region,
-    credentials: getCredentials()
-});
+const s3Client = new S3Client({});
 
 export const uploadFileToS3 = async (file, userId) => {
     const key = `receipts/${userId}/${uuidv4()}`;
