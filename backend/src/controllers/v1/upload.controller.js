@@ -5,8 +5,11 @@ import { receiptSchema, recipeSchema } from '../../models/receipt.js';
 import fs from 'fs';
 import path from 'path';
 import { uploadFileToS3 } from '../../services/s3-storage.js';
+import { createReceiptRecord, updateReceiptRecord } from '../../services/dynamoDB.js';
 
 export const uploadFile = async (req, res) => {
+    let receiptRecord = null
+
     try {
         // Check if file was uploaded
         if (!req.file || !req.file.buffer) {
@@ -16,33 +19,32 @@ export const uploadFile = async (req, res) => {
             });
         }
 
+        // Recieved file info
         const file = req.file
+        console.log(`Received file:`);
+        console.log(file)
+
+        // user info from auth middleware
         const { userId } = req.user
+        console.log(`Authenticated user ID: ${userId}`);
 
-        const { key } = await uploadFileToS3(file, userId);
-        console.log('File uploaded to S3:', key);
+        // Upload file to S3
+        const { key: S3key } = await uploadFileToS3(file, userId);
+        console.log('File uploaded to S3:', S3key);
 
-        return res.json({
-            success: true,
-            message: 'File uploaded successfully to S3',
-            data: { key },
-            fileInfo: {
-                originalName: file.originalname,
-                mimeType: file.mimetype,
-                size: file.size
-            }
-        });
+        // Create initial DynamoDB record with PROCESSING status
+        receiptRecord = await createReceiptRecord(userId, S3key, file);
+        console.log('Receipt created in DynamoDB:', receiptRecord);
 
         // Send to Tesseract OCR service
         const formData = new FormData();
         formData.append('image', new Blob([file.buffer]));
-
         const ocrResponse = await axios.post(`${config.services.tesseract.baseUrl}/ocr`, formData);
 
         if (ocrResponse.status !== 200) {
             throw new Error(`OCR service error: ${ocrResponse.statusText}`);
         }
-        console.log('OCR completed, sending text for LLM extraction');
+        console.log('OCR completed, sending text for LLM extraction', ocrResponse.data.text);
 
         // Extract receipt information using LLM
         const llmLLMJsonParse = await extractReceiptInfo(ocrResponse.data.text);
@@ -77,8 +79,15 @@ export const uploadFile = async (req, res) => {
             throw new Error(`Recipe suggestion validation failed: ${suggestionValidation.error}`);
         }
 
+        const fileInformation = {
+            originalName: file.originalname,
+            mimeType: file.mimetype,
+            size: file.size
+        }
+
         const responseData = {
-            fileInfo,
+            file: { ...fileInformation },
+            s3Key: S3key,
             ocrResult: ocrResponse.data,
             receiptData: { ...validation.data, recipes: suggestionValidation.data },
             processing: {
@@ -87,26 +96,45 @@ export const uploadFile = async (req, res) => {
             }
         };
 
-        // const storedReceipt = addToStorage({
-        //     data: responseData
-        // });
+        // Update DynamoDB record with COMPLETED status and results
+        const updatedRecord = await updateReceiptRecord(receiptRecord.receiptId, {
+            status: 'COMPLETED',
+            ocrResult: responseData.ocrResult,
+            receiptData: responseData.receiptData,
+            updatedAt: responseData.processing.timestamp,
+            s3Key: S3key
+        });
+
+        console.log('Receipt record updated in DynamoDB:');
 
         res.json({
             success: true,
             message: 'File uploaded and processed successfully',
-            data: responseData,
+            data: { ...responseData },
             storage: {
-                test: "test content"
-                //     receiptId: storedReceipt.id,
-                //     storedAt: storedReceipt.storedAt,
-                //     viewUrl: `/api/v1/receipts/${storedReceipt.id}`
+                receiptId: receiptRecord.receiptId,
+                status: updatedRecord.status,
+                createdAt: receiptRecord.createdAt,
+                updatedAt: updatedRecord.updatedAt,
+                s3Key: S3key,
+                viewUrl: `/api/v1/receipts/${receiptRecord.receiptId}`
             }
         });
 
     } catch (error) {
-        // Clean up file if it exists and there was an error
-        if (req.file && req.file.path) {
-            cleanupFile(req.file.path);
+        // Update DynamoDB record with error status if record was created
+        if (receiptRecord) {
+            try {
+                await updateReceiptRecord(receiptRecord.receiptId, {
+                    status: 'FAILED',
+                    error: {
+                        message: error.message,
+                        timestamp: new Date().toISOString()
+                    }
+                })
+            } catch (updateError) {
+                console.error('Error updating receipt record with failure status:', updateError);
+            }
         }
         console.error('Error processing file:', error);
         res.status(500).json({

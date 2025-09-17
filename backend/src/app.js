@@ -24,7 +24,7 @@ app.use('/api/v1/auth', authRoutes)
 // V1 routes
 app.use('/api/v1/health', authenticateToken, verifyAdmin, healthRoutes);
 app.use('/api/v1/upload', authenticateToken, verifyAdmin, uploadRoutes);
-app.use('/api/v1/receipt', authenticateToken, receiptsRoutes);
+app.use('/api/v1/receipts', authenticateToken, receiptsRoutes);
 app.use('/api/v1/ollama', authenticateToken, verifyAdmin, ollamaRoutes);
 
 // Start the server

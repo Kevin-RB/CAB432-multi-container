@@ -1,3 +1,4 @@
+import config from "../../config/index.js";
 import { recipeSchema } from "../../models/receipt.js";
 import ollama, { generateRecipeSuggestions } from "../../services/ollama.js";
 
@@ -19,7 +20,7 @@ export const generateResponse = async (req, res) => {
         }
 
         const ollamaResponse = await ollama.generate({
-            model: "gemma3:1b",
+            model: config.ollama.model,
             prompt,
             stream: false,
         });
