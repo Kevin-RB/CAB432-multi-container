@@ -17,8 +17,8 @@ services:
     image: ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/n12112798-kr-m5:api-prod-v1.2.0
     ports:
       - "3000:3000" # Direct external API access
-    environment:
-      - PORT=3000
+    env_file:
+      - ./backend/.env.production
     networks:
       - app-net
     depends_on:

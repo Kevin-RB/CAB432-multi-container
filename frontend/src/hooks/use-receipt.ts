@@ -7,12 +7,12 @@ async function fetchReceiptData(page: number) {
         success: boolean;
         message: string;
         data: PaginatedReceiptSchema;
-    }>('/receipt', {
+    }>('/receipts', {
         params: {
             page
         }
     });
-    return response.data.data;
+    return response.data;
 }
 
 export async function fetchReceipt(receiptId: string) {
@@ -31,7 +31,7 @@ async function fetchReceiptImage(imageId: string) {
 }
 
 export const useReceipt = ({page}: {page: number}) => {
-    return useQuery<PaginatedReceiptSchema>({
+    return useQuery<{message: string; data: PaginatedReceiptSchema, success: boolean}>({
         queryKey: ['receipts', page],
         queryFn: () => fetchReceiptData(page),
         placeholderData: keepPreviousData,

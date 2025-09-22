@@ -5,7 +5,6 @@ export const authenticateToken = async (req, res, next) => {
     // We are using Bearer auth.  The token is in the authorization header.
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1];
-    console.log("Authenticating token: ", token);
     if (!token) {
         console.log('JSON web token missing.');
         return res.sendStatus(401);
@@ -14,8 +13,6 @@ export const authenticateToken = async (req, res, next) => {
     // Check that the token is valid
     try {
         const response = await idVerifier.verify(token);
-        console.log("middleware: ", response);
-
         const isEmailVerified = response.email_verified === true;
         
         if (!isEmailVerified) {
@@ -38,7 +35,6 @@ export const authenticateToken = async (req, res, next) => {
 
 // Middleware to verify admin role
 export const verifyAdmin = (req, res, next) => {
-    console.log(`Admin verification initiated for user:`, req.user);
     if (req.user && req.user.admin) {
         next();
     } else {

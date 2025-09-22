@@ -3,7 +3,10 @@ import os from 'os';
 import config from '../config/index.js';
 import { receiptJSONschema, recipeJSONschema } from '../models/receipt.js';
 
-const ollama = new Ollama({ host: config.services.ollama.baseUrl })
+const ollama = new Ollama({
+    host: config.services.ollama.baseUrl,
+    timeout: 300000
+})
 
 export default ollama
 
@@ -14,6 +17,7 @@ export const extractReceiptInfo = (receiptPlainText) => {
     };
 
     const llmResponse = ollama.generate({
+        system: `You are a helpful assistant that extracts structured data from OCR text of shopping receipts. Follow the extraction and cleaning rules carefully to ensure accurate and clean data.`,
         prompt: `Parse this receipt OCR text and extract structured information. Clean up the data carefully.
 
                 EXTRACTION RULES:

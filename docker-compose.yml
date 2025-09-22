@@ -30,9 +30,14 @@ services:
     ports:
       - "3000:3000"
     env_file:
-      - ./backend/.env
+      - ./backend/.env.local
     environment:
       - PORT=3000
+      - AWS_PROFILE=default
+      - AWS_SDK_LOAD_CONFIG=1
+      - AWS_EC2_METADATA_DISABLED=true
+    volumes:
+      - ${USERPROFILE}/.aws:/root/.aws:ro
     networks:
       - app-net
     depends_on:
