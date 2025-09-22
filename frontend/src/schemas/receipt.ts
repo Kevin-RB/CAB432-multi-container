@@ -27,7 +27,6 @@ export const receiptItemSchema = z.object({
 })
 export type ReceiptItemSchema = z.infer<typeof receiptItemSchema>
 
-
 export const receiptListSchema = z.object({
   store_name: z.string(),
   items: z.array(receiptItemSchema),
@@ -38,29 +37,23 @@ export type ReceiptListSchema = z.infer<typeof receiptListSchema>
 
 
 export const receiptProcessSchema = z.object({
-  id: z.string(),
-  data: z.object({
-    fileInfo: z.object({
-      originalName: z.string(),
-      savedAs: z.string(),
-      filePath: z.string(),
-      mimeType: z.string(),
-      size: z.number(),
-      sizeInMB: z.string(),
-      uploadTime: z.string()
-    }),
-    ocrResult: z.object({
-      status: z.string(),
-      text: z.string(),
-      timestamp: z.number()
-    }),
-    receiptData: receiptListSchema,
-    processing: z.object({
-      duration: z.string(),
-      timestamp: z.string()
-    })
+  receiptId: z.string(),
+  userId: z.string(),
+  createdAt: z.string(),
+  updatedAt: z.string(),
+  status: z.string(),
+  fileInfo: z.object({
+    originalName: z.string(),
+    mimeType: z.string(),
+    size: z.number(),
   }),
-  storedAt: z.string()
+  ocrResult: z.object({
+    status: z.string(),
+    text: z.string(),
+    timestamp: z.number()
+  }),
+  viewUrl: z.string(),
+  receiptData: receiptListSchema,
 })
 
 export type ReceiptProcessSchema = z.infer<typeof receiptProcessSchema>

@@ -147,24 +147,22 @@ export const getUserReceiptHistory = async (req, res) => {
 
         // Get user receipts from DynamoDB
         const receipts = await getUserReceipts(userId, limit + offset);
-        
+        console.log("Found receipts");
+        console.log(receipts);
+
         // Apply offset manually (DynamoDB doesn't have built-in offset)
         const paginatedReceipts = receipts.slice(offset, offset + limit);
 
         // Transform data for response
         const receiptHistory = paginatedReceipts.map(receipt => ({
             receiptId: receipt.receiptId,
-            status: receipt.status,
-            fileInfo: receipt.fileInfo,
-            s3Key: receipt.s3Key,
             createdAt: receipt.createdAt,
             updatedAt: receipt.updatedAt,
-            hasOcrResult: !!receipt.ocrResult,
-            hasReceiptData: !!receipt.receiptData,
-            totalAmount: receipt.receiptData?.total || null,
-            itemCount: receipt.receiptData?.items?.length || 0,
-            recipeCount: receipt.receiptData?.recipes?.length || 0,
-            viewUrl: `/api/v1/receipts/${receipt.receiptId}`
+            status: receipt.status,
+            fileInfo: receipt.fileInfo,
+            ocrResult: receipt.ocrResult || null,
+            viewUrl: receipt.s3Key,
+            receiptData: receipt.receiptData || null,
         }));
 
         res.json({
@@ -173,12 +171,14 @@ export const getUserReceiptHistory = async (req, res) => {
             data: {
                 receipts: receiptHistory,
                 pagination: {
-                    total: receipts.length,
-                    limit: limit,
-                    offset: offset,
-                    hasMore: receipts.length > offset + limit
+                    currentPage: Math.floor(offset / limit) + 1,
+                    totalItems: receipts.length,
+                    itemsPerPage: limit,
+                    hasNextPage: offset + limit < receipts.length,
+                    hasPreviousPage: offset > 0,
+                    nextPage: offset + limit < receipts.length ? Math.floor((offset + limit) / limit) + 1 : null,
+                    previousPage: offset > 0 ? Math.floor((offset - limit) / limit) + 1 : null
                 },
-                userId: userId
             }
         });
 
@@ -232,16 +232,13 @@ export const getReceiptById = async (req, res) => {
         // Transform receipt data for response
         const receiptData = {
             receiptId: receipt.receiptId,
-            userId: receipt.userId,
-            status: receipt.status,
-            fileInfo: receipt.fileInfo,
-            s3Key: receipt.s3Key,
             createdAt: receipt.createdAt,
             updatedAt: receipt.updatedAt,
+            status: receipt.status,
+            fileInfo: receipt.fileInfo,
             ocrResult: receipt.ocrResult || null,
+            viewUrl: receipt.s3Key,
             receiptData: receipt.receiptData || null,
-            processing: receipt.processing || null,
-            errorDetails: receipt.errorDetails || null
         };
 
         res.json({

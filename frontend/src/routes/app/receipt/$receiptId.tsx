@@ -7,7 +7,7 @@ import { createFileRoute } from '@tanstack/react-router'
 
 export const Route = createFileRoute('/app/receipt/$receiptId')({
     // In a loader
-    loader: ({ params }) => api.get(`/receipt/${params.receiptId}`),
+    loader: ({ params }) => api.get(`/receipts/${params.receiptId}`),
     // Or in a component
     component: ReceiptComponent,
 })
@@ -17,8 +17,8 @@ function ReceiptComponent() {
 
     if (receiptData.statusText !== "OK") return <div>Something went wrong...</div>
 
-    const { data }: ReceiptProcessSchema = receiptData.data.data.receipt
-
+    const data: ReceiptProcessSchema = receiptData.data.data
+    
     return (
         <section className="container mx-auto p-4 grid grid-cols-1 gap-8">
             <h1 className="text-4xl font-bold mb-4">{data.fileInfo.originalName}</h1>
@@ -36,7 +36,10 @@ function ReceiptComponent() {
                 <VideoShowcase recipes={data.receiptData.recipes} />
             )}
             <h3 className="text-lg font-bold">Original Receipt</h3>
-            <ReceiptImage className='max-w-3xl mx-auto' imageId={data.fileInfo.savedAs} alt={data.fileInfo.originalName} />
+            {/* <ReceiptImage className='max-w-3xl mx-auto' imageId={data.fileInfo.savedAs} alt={data.fileInfo.originalName} /> */}
+            <div className='size-80 rounded-2xl bg-zinc-300 mx-auto grid place-items-center text-gray-600 text-center p-10'>
+                Image feature coming soon!
+            </div>
         </section>
     )
 }

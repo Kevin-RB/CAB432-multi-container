@@ -178,7 +178,7 @@ export const getReceiptRecord = async (receiptId) => {
     }
 };
 
-export const getUserReceipts = async (userId, limit = 50) => {
+export const getUserReceipts = async (userId, limit = 5) => {
     try {
         // Use Query to get all receipts for your QUT username, then filter by userId
         const result = await docClient.send(new QueryCommand({
