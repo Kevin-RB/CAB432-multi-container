@@ -1,3 +1,5 @@
+import { PARAMETERS } from "../services/paramenter-manager.js";
+import { SECRET_STORE } from "../services/secrets-manager.js";
 import { secret } from "../utils/jwt-utils.js";
 
 export const config = {
@@ -39,8 +41,9 @@ export const config = {
     secret: process.env.JWT_SECRET || secret,
     expiresIn: '30m'
   },
-  aws:{
-    s3BucketName: process.env.AWS_S3_BUCKET_NAME
+  aws: {
+    s3BucketName: async () => await PARAMETERS.AWS_S3_BUCKET_NAME(),
+    awsClientSecret: async () => await SECRET_STORE.AWS_CLIENT_SECRET()
   }
 };
 

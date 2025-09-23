@@ -21,8 +21,7 @@ export const uploadFile = async (req, res) => {
 
         // Recieved file info
         const file = req.file
-        console.log(`Received file:`);
-        console.log(file)
+        console.log(`File recieved`);
 
         // user info from auth middleware
         const { userId } = req.user

@@ -1,16 +1,16 @@
 import { DynamoDBClient, CreateTableCommand, DescribeTableCommand, waitUntilTableExists } from '@aws-sdk/client-dynamodb';
-import { DynamoDBDocumentClient, PutCommand, UpdateCommand, GetCommand, ScanCommand, QueryCommand } from '@aws-sdk/lib-dynamodb';
+import { DynamoDBDocumentClient, PutCommand, UpdateCommand, GetCommand, QueryCommand } from '@aws-sdk/lib-dynamodb';
 import { v4 as uuidv4 } from 'uuid';
-import { TABLE_NAME, TABLE_SCHEMA, QUT_USERNAME } from '../utils/dynamo-utils.js';
+import { getQutUsername, getTableName, getTableSchema } from '../utils/dynamo-utils.js';
 
 // Initialize DynamoDB client
 const client = new DynamoDBClient({});
 const docClient = DynamoDBDocumentClient.from(client);
 
 // Check if table exists
-export const checkTableExists = async () => {
+export const checkTableExists = async (tableName) => {
     try {
-        await client.send(new DescribeTableCommand({ TableName: TABLE_NAME }));
+        await client.send(new DescribeTableCommand({ TableName: tableName }));
         return true;
     } catch (error) {
         if (error.name === 'ResourceNotFoundException') {
@@ -23,23 +23,26 @@ export const checkTableExists = async () => {
 // Create the DynamoDB table
 export const createReceiptsTable = async () => {
     try {
-        console.log(`Creating DynamoDB table: ${TABLE_NAME}`);
+        const tableName = await getTableName();
+        console.log(`Creating DynamoDB table: ${tableName}`);
 
-        const tableExists = await checkTableExists();
+        const tableExists = await checkTableExists(tableName);
         if (tableExists) {
-            console.log(`Table ${TABLE_NAME} already exists`);
+            console.log(`Table ${tableName} already exists`);
             return;
         }
 
-        await client.send(new CreateTableCommand(TABLE_SCHEMA));
+        const tableSchema = await getTableSchema();
 
-        console.log(`Waiting for table ${TABLE_NAME} to be active...`);
+        await client.send(new CreateTableCommand(tableSchema));
+
+        console.log(`Waiting for table ${tableName} to be active...`);
         await waitUntilTableExists(
             { client, maxWaitTime: 300 }, // 5 minutes max wait
-            { TableName: TABLE_NAME }
+            { TableName: tableName }
         );
 
-        console.log(`Table ${TABLE_NAME} created successfully`);
+        console.log(`Table ${tableName} created successfully`);
     } catch (error) {
         console.error('Error creating table:', error);
         throw new Error(`Failed to create table: ${error.message}`);
@@ -63,28 +66,31 @@ export const createReceiptRecord = async (userId, s3Key, fileInfo) => {
     // await initializeDynamoDB();
     // 
     // 
-    const receiptId = uuidv4();
-    const timestamp = new Date().toISOString();
-
-    const item = {
-        "qut-username": QUT_USERNAME,
-        receiptId,
-        userId,
-        s3Key,
-        status: 'PROCESSING',
-        fileInfo: {
-            originalName: fileInfo.originalname,
-            mimeType: fileInfo.mimetype,
-            size: fileInfo.size
-        },
-        createdAt: timestamp,
-        updatedAt: timestamp,
-        ttl: Math.floor(Date.now() / 1000) + (30 * 24 * 60 * 60) // 30 days TTL
-    };
-
     try {
+        const username = await getQutUsername();
+        const tableName = await getTableName();
+
+        const receiptId = uuidv4();
+        const timestamp = new Date().toISOString();
+
+        const item = {
+            "qut-username": username,
+            receiptId,
+            userId,
+            s3Key,
+            status: 'PROCESSING',
+            fileInfo: {
+                originalName: fileInfo.originalname,
+                mimeType: fileInfo.mimetype,
+                size: fileInfo.size
+            },
+            createdAt: timestamp,
+            updatedAt: timestamp,
+            ttl: Math.floor(Date.now() / 1000) + (30 * 24 * 60 * 60) // 30 days TTL
+        };
+
         await docClient.send(new PutCommand({
-            TableName: TABLE_NAME,
+            TableName: tableName,
             Item: item
         }));
 
@@ -103,6 +109,9 @@ export const updateReceiptRecord = async (receiptId, updateData) => {
     const timestamp = new Date().toISOString();
 
     try {
+        const tableName = await getTableName();
+        const username = await getQutUsername();
+
         const updateExpression = [];
         const expressionAttributeValues = {};
         const expressionAttributeNames = {};
@@ -139,9 +148,9 @@ export const updateReceiptRecord = async (receiptId, updateData) => {
         expressionAttributeValues[':updatedAt'] = timestamp;
 
         const params = {
-            TableName: TABLE_NAME,
+            TableName: tableName,
             Key: {
-                "qut-username": QUT_USERNAME, // Partition key
+                "qut-username": username, // Partition key
                 receiptId // Sort key
             },
             UpdateExpression: `SET ${updateExpression.join(', ')}`,
@@ -163,10 +172,13 @@ export const updateReceiptRecord = async (receiptId, updateData) => {
 
 export const getReceiptRecord = async (receiptId) => {
     try {
+        const tableName = await getTableName();
+        const username = await getQutUsername();
+
         const result = await docClient.send(new GetCommand({
-            TableName: TABLE_NAME,
+            TableName: tableName,
             Key: {
-                "qut-username": QUT_USERNAME, // Partition key
+                "qut-username": username, // Partition key
                 receiptId // Sort key
             }
         }));
@@ -180,16 +192,19 @@ export const getReceiptRecord = async (receiptId) => {
 
 export const getUserReceipts = async (userId, limit = 5) => {
     try {
+        const tableName = await getTableName();
+        const username = await getQutUsername();
+
         // Use Query to get all receipts for your QUT username, then filter by userId
         const result = await docClient.send(new QueryCommand({
-            TableName: TABLE_NAME,
+            TableName: tableName,
             KeyConditionExpression: '#qutUsername = :qutUsername',
             FilterExpression: 'userId = :userId',
             ExpressionAttributeNames: {
                 '#qutUsername': 'qut-username'
             },
             ExpressionAttributeValues: {
-                ':qutUsername': QUT_USERNAME,
+                ':qutUsername': username,
                 ':userId': userId
             },
             ScanIndexForward: false, // Sort by receiptId descending (newest first)
@@ -206,14 +221,17 @@ export const getUserReceipts = async (userId, limit = 5) => {
 // Get all receipts for your QUT username (regardless of app userId)
 export const getAllMyReceipts = async (limit = 50) => {
     try {
+        const tableName = await getTableName();
+        const username = await getQutUsername();
+
         const result = await docClient.send(new QueryCommand({
-            TableName: TABLE_NAME,
+            TableName: tableName,
             KeyConditionExpression: '#qutUsername = :qutUsername',
             ExpressionAttributeNames: {
                 '#qutUsername': 'qut-username'
             },
             ExpressionAttributeValues: {
-                ':qutUsername': QUT_USERNAME
+                ':qutUsername': username
             },
             ScanIndexForward: false, // Sort by receiptId descending
             Limit: limit

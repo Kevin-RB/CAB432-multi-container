@@ -6,9 +6,10 @@ const s3Client = new S3Client({});
 
 export const uploadFileToS3 = async (file, userId) => {
     const key = `receipts/${userId}/${uuidv4()}`;
+    const bucketName = await config.aws.s3BucketName();
 
     const command = new PutObjectCommand({
-        Bucket: config.aws.s3BucketName,
+        Bucket: bucketName,
         Key: key,
         Body: file.buffer,
         ContentType: file.mimetype,
@@ -23,8 +24,10 @@ export const uploadFileToS3 = async (file, userId) => {
 };
 
 export const listUserFilesFromS3 = async (userId) => {
+    const bucketName = await config.aws.s3BucketName();
+
     const command = new ListObjectsV2Command({
-        Bucket: config.aws.s3BucketName,
+        Bucket: bucketName,
         Prefix: `receipts/${userId}/`
     });
     return s3Client.send(command);

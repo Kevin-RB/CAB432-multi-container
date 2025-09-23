@@ -7,11 +7,9 @@ export const authenticate = async (req, res) => {
         console.log("Getting auth token");
         const { username, password } = req.body;
         const response = await awsAuthenticate(username, password);
-        console.log("Auth response, ", response);
 
         const IdToken = response.AuthenticationResult.IdToken;
         const IdTokenVerifyResult = await idVerifier.verify(IdToken);
-        console.log("ID Token verification result: ", IdTokenVerifyResult);
 
         res.json({ 
             message: "Authentication successful",
