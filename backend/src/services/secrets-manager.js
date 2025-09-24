@@ -9,6 +9,7 @@ const client = new SecretsManagerClient({});
 
 export const SECRET_STORE = {
     AWS_CLIENT_SECRET: async () => await fetchSecrets("AWS_CLIENT_SECRET"),
+    YOUTUBE_API_KEY: async () => await fetchSecrets("YOUTUBE_API_KEY")
 };
 
 const fetchSecrets = async (key) => {
