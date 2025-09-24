@@ -21,8 +21,7 @@ export const uploadFile = async (req, res) => {
 
         // Recieved file info
         const file = req.file
-        console.log(`Received file:`);
-        console.log(file)
+        console.log(`File recieved`);
 
         // user info from auth middleware
         const { userId } = req.user
@@ -141,7 +140,6 @@ export const uploadFile = async (req, res) => {
             success: false,
             error: 'Internal server error',
             message: 'Failed to process file',
-            details: process.env.NODE_ENV === 'development' ? error.message : undefined
         });
     }
 }
@@ -211,7 +209,6 @@ export const getStoredImages = async (req, res) => {
             success: false,
             error: 'Internal server error',
             message: 'Failed to retrieve stored images',
-            details: process.env.NODE_ENV === 'development' ? error.message : undefined
         });
     }
 };
@@ -281,7 +278,6 @@ export const getImageFile = async (req, res) => {
             success: false,
             error: 'Internal server error',
             message: 'Failed to serve image file',
-            details: process.env.NODE_ENV === 'development' ? error.message : undefined
         });
     }
 };

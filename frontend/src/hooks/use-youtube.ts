@@ -1,27 +1,11 @@
-import { externalApi } from "@/lib/api";
+import api from "@/lib/api";
 import type { YouTubeSearchResult } from "@/schemas/google";
 import { useQueries } from "@tanstack/react-query";
 
 // Define a function for a single API call
 async function fetchYoutubeVideo(query: string): Promise<YouTubeSearchResult> {
-    const apiKey = import.meta.env.VITE_YOUTUBE_API_KEY;
-    const API_BASE_URL = 'https://www.googleapis.com/youtube/v3/search';
-
-    const response = await externalApi.get(API_BASE_URL, {
-        params: {
-            key: apiKey,
-            q: query,
-            part: "snippet",
-            type: 'video',
-            maxResults: 1 // Fetch 1 result for each recipe
-        },
-    });
-
-    if (response.status !== 200) {
-        throw new Error("Failed to fetch YouTube videos");
-    }
-
-    return response.data.items[0]; // Return the first item
+    const response = await api.get(`/videos/${encodeURIComponent(query)}`);
+    return response.data;
 }
 
 export const useYoutubeRecipes = ({ recipes }: { recipes: string[] }) => {

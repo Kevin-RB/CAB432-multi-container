@@ -1,5 +1,5 @@
 import { ReceiptDetailTable } from '@/components/receipt-details/receipt-detail-table'
-import ReceiptImage from '@/components/receipt-details/receipt-image'
+// import ReceiptImage from '@/components/receipt-details/receipt-image'
 import { VideoShowcase } from '@/components/receipt-details/videos/video-showcase'
 import api from '@/lib/api'
 import type { ReceiptProcessSchema } from '@/schemas/receipt'

@@ -1,5 +1,3 @@
-import { secret } from "../utils/jwt-utils.js";
-
 export const config = {
   port: process.env.PORT || 3000,
   services: {
@@ -9,15 +7,6 @@ export const config = {
     tesseract: {
       baseUrl: process.env.TESSERACT_URL || 'http://tesseract:3001'
     }
-  },
-  upload: {
-    maxFileSize: 10 * 1024 * 1024, // 10MB
-    allowedMimeTypes: [
-      'image/jpeg',
-      'image/png',
-      'image/gif',
-      'application/pdf'
-    ]
   },
   ollama: {
     model: 'gemma3:1b',
@@ -34,13 +23,6 @@ export const config = {
         top_p: 0.9,
       }
     }
-  },
-  jwt: {
-    secret: process.env.JWT_SECRET || secret,
-    expiresIn: '30m'
-  },
-  aws:{
-    s3BucketName: process.env.AWS_S3_BUCKET_NAME
   }
 };
 

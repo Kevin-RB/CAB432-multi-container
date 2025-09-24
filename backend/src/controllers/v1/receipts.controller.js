@@ -1,5 +1,6 @@
 import { getUserReceipts, getAllMyReceipts, getReceiptRecord } from "../../services/dynamoDB.js";
 import { listUserFilesFromS3 } from "../../services/s3-storage.js";
+import { getQutUsername } from "../../utils/dynamo-utils.js";
 
 let receiptStorage = [];
 
@@ -87,7 +88,6 @@ export const getPaginatedReceiptsOld = async (req, res) => {
             success: false,
             error: 'Internal server error',
             message: 'Failed to retrieve receipts',
-            details: process.env.NODE_ENV === 'development' ? error.message : undefined
         });
     }
 };
@@ -130,7 +130,6 @@ export const getReceiptByIdOld = (req, res) => {
             success: false,
             error: 'Internal server error',
             message: 'Failed to retrieve receipt',
-            details: process.env.NODE_ENV === 'development' ? error.message : undefined
         });
     }
 };
@@ -143,12 +142,8 @@ export const getUserReceiptHistory = async (req, res) => {
         const limit = parseInt(req.query.limit) || 50;
         const offset = parseInt(req.query.offset) || 0;
 
-        console.log(`Fetching receipt history for user: ${userId}`);
-
         // Get user receipts from DynamoDB
         const receipts = await getUserReceipts(userId, limit + offset);
-        console.log("Found receipts");
-        console.log(receipts);
 
         // Apply offset manually (DynamoDB doesn't have built-in offset)
         const paginatedReceipts = receipts.slice(offset, offset + limit);
@@ -188,7 +183,6 @@ export const getUserReceiptHistory = async (req, res) => {
             success: false,
             error: 'Internal server error',
             message: 'Failed to retrieve receipt history',
-            details: process.env.NODE_ENV === 'development' ? error.message : undefined
         });
     }
 };
@@ -253,7 +247,6 @@ export const getReceiptById = async (req, res) => {
             success: false,
             error: 'Internal server error',
             message: 'Failed to retrieve receipt',
-            details: process.env.NODE_ENV === 'development' ? error.message : undefined
         });
     }
 };
@@ -262,7 +255,7 @@ export const getReceiptById = async (req, res) => {
 export const getAllReceipts = async (req, res) => {
     try {
         const limit = parseInt(req.query.limit) || 50;
-        
+        const username = await getQutUsername()
         console.log('Fetching all receipts from QUT namespace');
 
         // Get all receipts from DynamoDB
@@ -288,7 +281,7 @@ export const getAllReceipts = async (req, res) => {
             data: {
                 receipts: receiptHistory,
                 totalCount: receipts.length,
-                qutUsername: process.env.QUT_USERNAME || "n12112798@qut.edu.au"
+                qutUsername: username
             }
         });
 
@@ -298,7 +291,6 @@ export const getAllReceipts = async (req, res) => {
             success: false,
             error: 'Internal server error',
             message: 'Failed to retrieve all receipts',
-            details: process.env.NODE_ENV === 'development' ? error.message : undefined
         });
     }
 };

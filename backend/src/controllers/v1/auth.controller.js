@@ -1,17 +1,17 @@
 import Cognito from "@aws-sdk/client-cognito-identity-provider"
 import { secretHash } from "../../utils/auth-utils.js";
 import { awsAuthenticate, idVerifier } from "../../services/auth.js";
+import { PARAMETERS } from "../../services/paramenter-manager.js";
+import { SECRET_STORE } from "../../services/secrets-manager.js";
 
 export const authenticate = async (req, res) => {
     try {
         console.log("Getting auth token");
         const { username, password } = req.body;
         const response = await awsAuthenticate(username, password);
-        console.log("Auth response, ", response);
 
         const IdToken = response.AuthenticationResult.IdToken;
-        const IdTokenVerifyResult = await idVerifier.verify(IdToken);
-        console.log("ID Token verification result: ", IdTokenVerifyResult);
+        const IdTokenVerifyResult = await idVerifier(IdToken);
 
         res.json({ 
             message: "Authentication successful",
@@ -32,11 +32,13 @@ export const signup = async (req, res) => {
 
     const { email, password, username } = req.body;
 
-    const clientId = process.env.AWS_CLIENT_ID;
-    const clientSecret = process.env.AWS_CLIENT_SECRET;
-
+    
     try {
-        const client = new Cognito.CognitoIdentityProviderClient({ region: process.env.AWS_REGION });
+        const clientId = await PARAMETERS.AWS_CLIENT_ID();
+        const clientSecret = await SECRET_STORE.AWS_CLIENT_SECRET();
+        const region = await PARAMETERS.AWS_REGION();
+
+        const client = new Cognito.CognitoIdentityProviderClient({ region: region });
         const command = new Cognito.SignUpCommand({
             ClientId: clientId,
             SecretHash: secretHash(clientId, clientSecret, username),
@@ -59,12 +61,13 @@ export const confirmSignup = async (req, res) => {
         console.log("Missing username or confirmation code");
         return res.status(400).json({ error: "confirmation code is required" });
     }
-
-    const clientId = process.env.AWS_CLIENT_ID;
-    const clientSecret = process.env.AWS_CLIENT_SECRET;
-
+    
     try {
-        const client = new Cognito.CognitoIdentityProviderClient({ region: process.env.AWS_REGION });
+        const clientId = await PARAMETERS.AWS_CLIENT_ID();
+        const clientSecret = await SECRET_STORE.AWS_CLIENT_SECRET();
+        const region = await PARAMETERS.AWS_REGION();
+
+        const client = new Cognito.CognitoIdentityProviderClient({ region: region });
         const command = new Cognito.ConfirmSignUpCommand({
             ClientId: clientId,
             SecretHash: secretHash(clientId, clientSecret, req.body.username),

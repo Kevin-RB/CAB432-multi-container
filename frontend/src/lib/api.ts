@@ -51,10 +51,4 @@ api.interceptors.response.use(
   }
 );
 
-
-// Create a separate axios instance for external APIs (no auth interceptors)
-export const externalApi = axios.create({
-  timeout: 10000,
-});
-
 export default api;
