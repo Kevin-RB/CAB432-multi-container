@@ -2,11 +2,9 @@ name: receipt-app
 
 services:
   frontend:
-    image: ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/n12112798-kr-m5:front-testv1.0.1
+    image: 901444280953.dkr.ecr.ap-southeast-2.amazonaws.com/n12112798-kr-m5:frontend-v2.0.0
     ports:
       - "80:3000"  # EC2:80 → Container:3000 (matches your Dockerfile)
-    environment:
-      - VITE_YOUTUBE_API_KEY=${VITE_YOUTUBE_API_KEY}
     networks:
       - app-net
     depends_on:
@@ -14,11 +12,12 @@ services:
     restart: unless-stopped
 
   api:
-    image: ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/n12112798-kr-m5:api-prod-v1.2.0
+    image: 901444280953.dkr.ecr.ap-southeast-2.amazonaws.com/n12112798-kr-m5:api-prod-v2.0.0
     ports:
       - "3000:3000" # Direct external API access
-    env_file:
-      - ./backend/.env.production
+    volumes:
+      # Mount AWS config files so container can use your SSO credentials
+      - ~/.aws:/root/.aws:ro
     networks:
       - app-net
     depends_on:
@@ -27,7 +26,7 @@ services:
     restart: unless-stopped
 
   tesseract:
-    image: ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/n12112798-kr-m5:tesseract-v1.0
+    image: 901444280953.dkr.ecr.ap-southeast-2.amazonaws.com/n12112798-kr-m5:tesseract-v1.0
     networks:
       - app-net
     healthcheck:
