@@ -1,5 +1,4 @@
 import { Home } from "lucide-react"
-
 import {
   Sidebar,
   SidebarContent,
@@ -7,15 +6,14 @@ import {
   SidebarGroupContent,
   SidebarGroupLabel,
   SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
 } from "@/components/ui/sidebar"
+import { SidebarItem } from "./sidebar-item"
 
 // Menu items.
 const items = [
   {
     title: "Home",
-    url: "#",
+    url: "/app",
     icon: Home,
   },
 ]
@@ -29,14 +27,7 @@ export function AppSidebar() {
           <SidebarGroupContent>
             <SidebarMenu>
               {items.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild>
-                    <a href={item.url}>
-                      <item.icon />
-                      <span>{item.title}</span>
-                    </a>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
+                <SidebarItem key={item.title} icon={<item.icon />} title={item.title} url={item.url} />
               ))}
             </SidebarMenu>
           </SidebarGroupContent>

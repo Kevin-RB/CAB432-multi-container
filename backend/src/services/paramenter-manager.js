@@ -14,7 +14,7 @@ export const PARAMETERS = {
 }
 
 const fetchParameters = async (parameter) => {
-    console.log("Fetching parameter:", parameter);
+    // console.log("Fetching parameter:", parameter);
     try {
         const parameterBase = "/n12112798/cosmic-receipt/";
         const completeParameterPath = `${parameterBase}${parameter}`;

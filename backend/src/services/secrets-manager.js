@@ -13,7 +13,7 @@ export const SECRET_STORE = {
 };
 
 const fetchSecrets = async (key) => {
-    console.log("Fetching secret:", key);
+    // console.log("Fetching secret:", key);
     const secretName = await PARAMETERS.AWS_CLIENT_SECRET_NAME();
 
     try {

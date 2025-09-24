@@ -1,30 +1,16 @@
-import { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useReceiptImage } from '@/hooks/use-receipt';
 
 interface ReceiptImageProps {
-    imageId: string;
+    imageKey: string;
     alt?: string;
     className?: string;
 }
 
-export const ReceiptImage = ({ imageId, alt = 'Receipt image', className }: ReceiptImageProps) => {
-    const [imageUrl, setImageUrl] = useState<string | null>(null);
-    const { data, isLoading, isError, error } = useReceiptImage(imageId);
-
-    useEffect(() => {
-        if (data) {
-            setImageUrl(data);
-        }
-        // Cleanup function to revoke object URL when component unmounts or data changes
-        return () => {
-            if (imageUrl) {
-                URL.revokeObjectURL(imageUrl);
-            }
-        };
-    }, [data]);
-
+export const ReceiptImage = ({ imageKey, alt = 'Receipt image', className }: ReceiptImageProps) => {
+    const { data, isLoading, isError, error } = useReceiptImage(imageKey);
+    
     if (isLoading) {
         return (
             <Card className={`p-4 ${className}`}>
@@ -36,7 +22,7 @@ export const ReceiptImage = ({ imageId, alt = 'Receipt image', className }: Rece
         );
     }
 
-    if (isError || !imageUrl) {
+    if (isError) {
         return (
             <Card className={`p-4 ${className}`}>
                 <div className="flex items-center justify-center h-64 bg-gray-100 rounded-md">
@@ -51,11 +37,15 @@ export const ReceiptImage = ({ imageId, alt = 'Receipt image', className }: Rece
         );
     }
 
+    if (!data) {
+        return null;
+    }
+
     return (
         <Card className={`p-4 ${className}`}>
             <div className="space-y-2">
                 <img
-                    src={imageUrl}
+                    src={data.data.url}
                     alt={alt}
                     className="w-full h-auto rounded-md border shadow-sm"
                     onError={() => {
