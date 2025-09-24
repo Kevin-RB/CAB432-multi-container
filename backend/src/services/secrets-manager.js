@@ -3,12 +3,9 @@ import {
     SecretsManagerClient,
     GetSecretValueCommand,
 } from "@aws-sdk/client-secrets-manager";
+import { PARAMETERS } from "./paramenter-manager.js";
 
-const secret_name = "n12112798-cosmic-receipt";
-
-const client = new SecretsManagerClient({
-    region: "ap-southeast-2",
-});
+const client = new SecretsManagerClient({});
 
 export const SECRET_STORE = {
     AWS_CLIENT_SECRET: async () => await fetchSecrets("AWS_CLIENT_SECRET"),
@@ -16,17 +13,19 @@ export const SECRET_STORE = {
 
 const fetchSecrets = async (key) => {
     console.log("Fetching secret:", key);
+    const secretName = await PARAMETERS.AWS_CLIENT_SECRET_NAME();
 
     try {
         const command = new GetSecretValueCommand({
-            SecretId: secret_name,
+            SecretId: secretName,
             VersionStage: "AWSCURRENT", // VersionStage defaults to AWSCURRENT if unspecified
         });
         const response = await client.send(command);
 
         const secret = JSON.parse(response.SecretString);
-        SECRET_STORE[key] = secret[key];
 
+        if (!(key in secret)) throw new Error(`Key ${key} not found in secret`);
+  
         return secret[key];
     } catch (error) {
         // For a list of exceptions thrown, see

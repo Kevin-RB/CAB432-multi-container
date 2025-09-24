@@ -13,15 +13,8 @@ RUN npm install
 # Copy the rest of the application code
 COPY . .
 
-# Create uploads directory for file uploads
-RUN mkdir -p uploads
-
 # Expose the port the app runs on
 EXPOSE 3000
-
-# Set environment variables
-# ENV NODE_ENV=production
-# ENV PORT=3000
 
 # Define the command to run the application
 CMD ["npm", "start"]

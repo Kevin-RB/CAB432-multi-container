@@ -12,7 +12,7 @@ export const authenticateToken = async (req, res, next) => {
 
     // Check that the token is valid
     try {
-        const response = await idVerifier.verify(token);
+        const response = await idVerifier(token);
         const isEmailVerified = response.email_verified === true;
         
         if (!isEmailVerified) {

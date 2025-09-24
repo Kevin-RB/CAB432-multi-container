@@ -88,7 +88,6 @@ export const getPaginatedReceiptsOld = async (req, res) => {
             success: false,
             error: 'Internal server error',
             message: 'Failed to retrieve receipts',
-            details: process.env.NODE_ENV === 'development' ? error.message : undefined
         });
     }
 };
@@ -131,7 +130,6 @@ export const getReceiptByIdOld = (req, res) => {
             success: false,
             error: 'Internal server error',
             message: 'Failed to retrieve receipt',
-            details: process.env.NODE_ENV === 'development' ? error.message : undefined
         });
     }
 };
@@ -185,7 +183,6 @@ export const getUserReceiptHistory = async (req, res) => {
             success: false,
             error: 'Internal server error',
             message: 'Failed to retrieve receipt history',
-            details: process.env.NODE_ENV === 'development' ? error.message : undefined
         });
     }
 };
@@ -250,7 +247,6 @@ export const getReceiptById = async (req, res) => {
             success: false,
             error: 'Internal server error',
             message: 'Failed to retrieve receipt',
-            details: process.env.NODE_ENV === 'development' ? error.message : undefined
         });
     }
 };
@@ -295,7 +291,6 @@ export const getAllReceipts = async (req, res) => {
             success: false,
             error: 'Internal server error',
             message: 'Failed to retrieve all receipts',
-            details: process.env.NODE_ENV === 'development' ? error.message : undefined
         });
     }
 };
