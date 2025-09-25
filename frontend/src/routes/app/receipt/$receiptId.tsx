@@ -1,5 +1,5 @@
 import { ReceiptDetailTable } from '@/components/receipt-details/receipt-detail-table'
-// import ReceiptImage from '@/components/receipt-details/receipt-image'
+import ReceiptImage from '@/components/receipt-details/receipt-image'
 import { VideoShowcase } from '@/components/receipt-details/videos/video-showcase'
 import api from '@/lib/api'
 import type { ReceiptProcessSchema } from '@/schemas/receipt'
@@ -36,10 +36,7 @@ function ReceiptComponent() {
                 <VideoShowcase recipes={data.receiptData.recipes} />
             )}
             <h3 className="text-lg font-bold">Original Receipt</h3>
-            {/* <ReceiptImage className='max-w-3xl mx-auto' imageId={data.fileInfo.savedAs} alt={data.fileInfo.originalName} /> */}
-            <div className='size-80 rounded-2xl bg-zinc-300 mx-auto grid place-items-center text-gray-600 text-center p-10'>
-                Image feature coming soon!
-            </div>
+            <ReceiptImage className='max-w-3xl mx-auto' imageKey={data.viewUrl} alt={data.fileInfo.originalName} />
         </section>
     )
 }

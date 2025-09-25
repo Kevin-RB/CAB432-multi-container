@@ -1,139 +1,6 @@
 import { getUserReceipts, getAllMyReceipts, getReceiptRecord } from "../../services/dynamoDB.js";
-import { listUserFilesFromS3 } from "../../services/s3-storage.js";
 import { getQutUsername } from "../../utils/dynamo-utils.js";
-
-let receiptStorage = [];
-
-/**
- * Add a processed receipt to storage
- * @param {Object} receiptData - The processed receipt data
- * @returns {Object} - The stored receipt with added metadata
- */
-export const addToStorageOld = (receiptData) => {
-    const storedReceipt = {
-        id: Date.now().toString(), // Simple ID generation
-        ...receiptData,
-        storedAt: new Date().toISOString()
-    };
-
-    receiptStorage.push(storedReceipt);
-    console.log(`Added receipt to storage. Total receipts: ${receiptStorage.length}`);
-
-    return storedReceipt;
-};
-
-/**
- * Get all stored receipts with pagination
- * @param {Object} req - Express request object
- * @param {Object} res - Express response object
- * @query {number} page - Page number (default: 1)
- * @query {number} limit - Number of receipts per page (default: 3)
- * @returns {Object} - Paginated receipts data
- */
-export const getPaginatedReceiptsOld = async (req, res) => {
-    try {
-        // Parse pagination parameters from query string
-        const page = parseInt(req.query.page) || 1;
-        const limit = parseInt(req.query.limit) || 3;
-
-        // Validate pagination parameters
-        if (page < 1) {
-            return res.status(400).json({
-                success: false,
-                error: 'Invalid page number',
-                message: 'Page number must be greater than 0'
-            });
-        }
-
-        if (limit < 1 || limit > 5) {
-            return res.status(400).json({
-                success: false,
-                error: 'Invalid limit',
-                message: 'Limit must be between 1 and 5'
-            });
-        }
-
-        // Calculate pagination values
-        const totalReceipts = receiptStorage.length;
-        const totalPages = Math.ceil(totalReceipts / limit);
-        const startIndex = (page - 1) * limit;
-        const endIndex = startIndex + limit;
-
-        // Get the receipts for the current page
-        const paginatedReceipts = receiptStorage.slice(startIndex, endIndex);
-
-        // Calculate pagination metadata
-        const hasNextPage = page < totalPages;
-        const hasPreviousPage = page > 1;
-
-        res.json({
-            success: true,
-            message: 'Successfully retrieved receipts',
-            data: {
-                receipts: paginatedReceipts,
-                pagination: {
-                    currentPage: page,
-                    totalPages,
-                    totalItems: totalReceipts,
-                    itemsPerPage: limit,
-                    hasNextPage,
-                    hasPreviousPage,
-                    nextPage: hasNextPage ? page + 1 : null,
-                    previousPage: hasPreviousPage ? page - 1 : null
-                }
-            }
-        });
-    } catch (error) {
-        res.status(500).json({
-            success: false,
-            error: 'Internal server error',
-            message: 'Failed to retrieve receipts',
-        });
-    }
-};
-
-/**
- * Get a specific receipt by ID
- * @param {string} id - Receipt ID
- * @returns {Object} - The requested receipt or null if not found
- */
-
-export const getReceiptByIdOld = (req, res) => {
-    try {
-        const { id } = req.params;
-
-        if (!id) {
-            return res.status(400).json({
-                success: false,
-                error: 'Missing ID',
-                message: 'Receipt ID parameter is required'
-            });
-        }
-
-        const receipt = receiptStorage.find(r => r.id === id);
-
-        if (!receipt) {
-            return res.status(404).json({
-                success: false,
-                error: 'Receipt not found',
-                message: `Receipt with ID '${id}' not found`
-            });
-        }
-
-        res.json({
-            success: true,
-            message: 'Successfully retrieved receipt',
-            data: { receipt }
-        });
-    } catch (error) {
-        res.status(500).json({
-            success: false,
-            error: 'Internal server error',
-            message: 'Failed to retrieve receipt',
-        });
-    }
-};
-
+import { getPreSignedUrl } from "../../services/s3-storage.js";
 
 // Get all receipts for the authenticated user
 export const getUserReceiptHistory = async (req, res) => {
@@ -201,7 +68,7 @@ export const getReceiptById = async (req, res) => {
             });
         }
 
-        console.log(`Fetching receipt: ${receiptId} for user: ${userId}`);
+        // console.log(`Fetching receipt: ${receiptId} for user: ${userId}`);
 
         // Get receipt from DynamoDB
         const receipt = await getReceiptRecord(receiptId);
@@ -294,3 +161,42 @@ export const getAllReceipts = async (req, res) => {
         });
     }
 };
+
+export const getReceiptImageUrl = async (req, res) => {
+    console.log("Received request for receipt image URL");
+    try {
+        const s3key = req.query.s3key;
+
+        if (!s3key) {
+            return res.status(400).json({
+                success: false,
+                error: 'Missing image ID',
+                message: 'Image ID parameter is required'
+            });
+        }
+
+        // Validate S3 key format (optional but recommended for security)
+        if (!s3key.startsWith('receipts/')) {
+            return res.status(400).json({
+                success: false,
+                error: 'Invalid S3 key format',
+                message: 'S3 key must start with "receipts/"'
+            });
+        }
+
+        const { url } = await getPreSignedUrl(s3key); // URL valid for 15 minutes
+
+        res.json({
+            success: true,
+            message: 'Successfully retrieved receipt image URL',
+            data: { url, s3key }
+        });
+    } catch (error) {
+        console.error('Error getting receipt image URL:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Internal server error',
+            message: 'Failed to retrieve receipt image URL'
+        });
+    }
+}

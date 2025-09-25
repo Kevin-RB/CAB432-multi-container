@@ -20,14 +20,15 @@ export async function fetchReceipt(receiptId: string) {
     return response.data.data.receipt;
 }
 
-// Function to fetch image blob from the API
-async function fetchReceiptImage(imageId: string) {
-  const response = await api.get(`/upload/image/${imageId}`, {
-    responseType: 'blob',
-  });
-
-  // Create object URL from blob
-  return URL.createObjectURL(response.data);
+async function fetchReceiptImage(imageKey: string) {
+    const response = await api.get(`/receipts/image`, {
+        params: {
+            s3key: imageKey
+        },
+        responseType: 'json',
+     });
+    // Create object URL from blob
+    return response.data;
 }
 
 export const useReceipt = ({page}: {page: number}) => {
@@ -46,11 +47,12 @@ export const useReceiptById = (receiptId: string) => {
     })
 }
 
-export const useReceiptImage = (imageId: string) => {
-    return useQuery({
-        queryKey: ['receipt-image', imageId],
-        queryFn: () => fetchReceiptImage(imageId),
-        staleTime: Infinity,
-        enabled: !!imageId,
+export const useReceiptImage = (imageKey: string) => {
+    return useQuery<{success: boolean; message: string; data: {url:string, s3key:string}}>({
+        queryKey: ['receipt-image', imageKey],
+        queryFn: () => fetchReceiptImage(imageKey),
+        staleTime: 55 * 60 * 1000, // 55 minutes (slightly less than URL expiration)
+        enabled: !!imageKey,
+        retry: 2,
       })
 }

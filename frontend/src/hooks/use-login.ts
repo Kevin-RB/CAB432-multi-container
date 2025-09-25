@@ -9,12 +9,10 @@ const navigate = useNavigate({from: '/'});
 return useMutation({
     mutationFn: async (data: LoginSchema) => {
       const response = await api.post("/auth/login", data);
-      console.log("Login response:", response);
       return response.data;
     },
     onSuccess: (data) => {
       // Handle successful login
-      console.log("Login successful:");
       localStorage.setItem("token", data.authToken);
       navigate({to: '/app'});
     },
