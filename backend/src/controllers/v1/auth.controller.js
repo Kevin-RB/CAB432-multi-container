@@ -86,15 +86,14 @@ export const confirmSignup = async (req, res) => {
 }
 
 export const loginWithGoogle = async (req, res) => {
-    // to be set in the parameter store
-    const POOL_DOMAIN = "https://ap-southeast-2mvkdjyjhj.auth.ap-southeast-2.amazoncognito.com"
+    const poolDomain = await PARAMETERS.COGNITO_POOL_DOMAIN();
     const authRoute = "/oauth2/authorize"
-    const redirectUri = `${req.protocol}://${req.get('host')}/api/v1/auth/google/callback` // to be set in the parameter store
+    const redirectUri = await getRedirectUri(req);
 
     try {
         const clientId = await PARAMETERS.AWS_CLIENT_ID();
 
-        const googleUrl = new URL(`${POOL_DOMAIN}${authRoute}`);
+        const googleUrl = new URL(`${poolDomain}${authRoute}`);
         console.log("Cognito Google OAuth URL:", googleUrl.toString());
 
         // Use URLSearchParams for proper encoding
@@ -132,13 +131,12 @@ export const googleCallback = async (req, res) => {
     }
 
     try {
-        // to be set in the parameter store
-        const POOL_DOMAIN = "https://ap-southeast-2mvkdjyjhj.auth.ap-southeast-2.amazoncognito.com"
+        const poolDomain = await PARAMETERS.COGNITO_POOL_DOMAIN();
         const clientId = await PARAMETERS.AWS_CLIENT_ID();
         const clientSecret = await SECRET_STORE.AWS_CLIENT_SECRET();
-        const redirectUri = `${req.protocol}://${req.get('host')}/api/v1/auth/google/callback` // to be set in the parameter store
+        const redirectUri = await getRedirectUri(req);
 
-        const tokenResponse = await axios.post(`${POOL_DOMAIN}/oauth2/token`,
+        const tokenResponse = await axios.post(`${poolDomain}/oauth2/token`,
             new URLSearchParams({
                 grant_type: 'authorization_code',
                 client_id: clientId,
@@ -166,17 +164,50 @@ export const googleCallback = async (req, res) => {
         const addUserToGroupResponse = await addUserToGroup(IdTokenVerifyResult["cognito:username"], "admin");
         console.log("Add user to group response:", addUserToGroupResponse);
 
-        IdTokenVerifyResult["cognito:groups"].push("admin");
+        if (!IdTokenVerifyResult["cognito:groups"].includes("admin")){
+            IdTokenVerifyResult["cognito:groups"].push("admin");
+        }
 
         // Replicate the authenticate function logic to generate tokens for the user
         const sessionToken = generateSessionToken(IdTokenVerifyResult, { id_token, access_token, refresh_token }); // Implement this based on your auth system
 
+        // Get frontend URL from parameter store or environment variable
+        const frontendUrl = await getFrontendUrl(req);
+
         // Redirect to frontend with success and token
-        res.redirect(`http://localhost:3001/auth/success?token=${sessionToken}`);
+        res.redirect(`${frontendUrl}/auth/success?token=${sessionToken}`);
     } catch (error) {
         console.error("Error exchanging code for tokens:", error);
         return res.json({ error: "Token exchange failed" });
     }
+}
+
+// Helper functions with environment detection
+async function getFrontendUrl(req) {
+    // Check if running locally based on host
+    const host = req.get('host');
+    const isLocal = host.includes('localhost') || host.includes('127.0.0.1');
+
+    if (isLocal) {
+        // For local development, use environment variable or default
+        return 'http://localhost:3001';
+    }
+
+    return PARAMETERS.DOMAIN_NAME();
+}
+
+async function getRedirectUri(req) {
+    // Check if running locally
+    const host = req.get('host');
+    const isLocal = host.includes('localhost') || host.includes('127.0.0.1');
+
+    if (isLocal) {
+        // For local development
+        return `${req.protocol}://${req.get('host')}/api/v1/auth/google/callback`;
+    }
+
+    const baseUrl = await PARAMETERS.DOMAIN_NAME();
+    return `${baseUrl}/api/v1/auth/google/callback`;
 }
 
 function generateSessionToken(IdTokenVerifyResult, cognitoTokens) {
