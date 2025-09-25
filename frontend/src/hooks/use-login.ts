@@ -1,4 +1,5 @@
 import api from "@/lib/api";
+import { storeUserInfo } from "@/lib/store";
 import type { LoginSchema } from "@/schemas/auth";
 import { useMutation } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
@@ -14,8 +15,7 @@ return useMutation({
     onSuccess: (data) => {
       // Handle successful login
       console.log("Login successful:", data);
-      localStorage.setItem("token", data.authToken);
-      localStorage.setItem("Roles", JSON.stringify(data?.user?.["cognito:groups"]));
+      storeUserInfo(data.authToken, data?.user?.["cognito:groups"] || []);
       navigate({to: '/app'});
     },
     onError: (error) => {

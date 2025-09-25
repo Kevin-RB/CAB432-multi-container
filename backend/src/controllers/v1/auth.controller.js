@@ -3,6 +3,7 @@ import { secretHash } from "../../utils/auth-utils.js";
 import { awsAuthenticate, idVerifier } from "../../services/auth.js";
 import { PARAMETERS } from "../../services/paramenter-manager.js";
 import { SECRET_STORE } from "../../services/secrets-manager.js";
+import axios from "axios";
 
 export const authenticate = async (req, res) => {
     try {
@@ -13,11 +14,11 @@ export const authenticate = async (req, res) => {
         const IdToken = response.AuthenticationResult.IdToken;
         const IdTokenVerifyResult = await idVerifier(IdToken);
 
-        res.json({ 
+        res.json({
             message: "Authentication successful",
             authToken: IdToken,
             user: IdTokenVerifyResult,
-            data: response 
+            data: response
         });
     } catch (error) {
         console.error("Error during authentication:", error);
@@ -32,7 +33,7 @@ export const signup = async (req, res) => {
 
     const { email, password, username } = req.body;
 
-    
+
     try {
         const clientId = await PARAMETERS.AWS_CLIENT_ID();
         const clientSecret = await SECRET_STORE.AWS_CLIENT_SECRET();
@@ -61,7 +62,7 @@ export const confirmSignup = async (req, res) => {
         console.log("Missing username or confirmation code");
         return res.status(400).json({ error: "confirmation code is required" });
     }
-    
+
     try {
         const clientId = await PARAMETERS.AWS_CLIENT_ID();
         const clientSecret = await SECRET_STORE.AWS_CLIENT_SECRET();
@@ -81,5 +82,128 @@ export const confirmSignup = async (req, res) => {
     } catch (error) {
         console.error("Error confirming user:", error);
         res.status(400).json({ error: error.message || "Confirmation failed" });
+    }
+}
+
+export const loginWithGoogle = async (req, res) => {
+    // to be set in the parameter store
+    const POOL_DOMAIN = "https://ap-southeast-2mvkdjyjhj.auth.ap-southeast-2.amazoncognito.com"
+    const authRoute = "/oauth2/authorize"
+    const redirectUri = `${req.protocol}://${req.get('host')}/api/v1/auth/google/callback` // to be set in the parameter store
+
+    try {
+        const clientId = await PARAMETERS.AWS_CLIENT_ID();
+
+        const googleUrl = new URL(`${POOL_DOMAIN}${authRoute}`);
+        console.log("Cognito Google OAuth URL:", googleUrl.toString());
+
+        // Use URLSearchParams for proper encoding
+        const params = new URLSearchParams({
+            response_type: 'code',
+            client_id: clientId,
+            redirect_uri: redirectUri,
+            identity_provider: 'Google',
+            scope: 'openid email',
+            prompt: 'login' // Force the consent screen to show every time
+        });
+
+        for (const [key, value] of params) {
+            googleUrl.searchParams.append(key, value);
+        }
+
+        console.log("Redirecting to Google OAuth URL:", googleUrl.toString());
+        res.json({ authUrl: googleUrl.toString() });
+    } catch (error) {
+        console.error("Error redirecting to Google OAuth:", error);
+        res.status(500).json({ error: "Internal server error" });
+    }
+}
+
+export const googleCallback = async (req, res) => {
+    const { code, error } = req.query;
+
+    if (error) {
+        console.error('OAuth error:', error);
+        return res.json({ error: "OAuth error occurred" });
+    }
+
+    if (!code) {
+        return res.json({ error: "No authorization code provided" });
+    }
+
+    try {
+        // to be set in the parameter store
+        const POOL_DOMAIN = "https://ap-southeast-2mvkdjyjhj.auth.ap-southeast-2.amazoncognito.com"
+        const clientId = await PARAMETERS.AWS_CLIENT_ID();
+        const clientSecret = await SECRET_STORE.AWS_CLIENT_SECRET();
+        const redirectUri = `${req.protocol}://${req.get('host')}/api/v1/auth/google/callback` // to be set in the parameter store
+
+        const tokenResponse = await axios.post(`${POOL_DOMAIN}/oauth2/token`,
+            new URLSearchParams({
+                grant_type: 'authorization_code',
+                client_id: clientId,
+                code: code,
+                redirect_uri: redirectUri
+            }), {
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'Authorization': `Basic ${Buffer.from(`${clientId}:${clientSecret}`).toString('base64')}`
+            }
+        });
+
+        if (tokenResponse.statusText !== 'OK') {
+            console.error("Token endpoint returned non-OK status:", tokenResponse.status);
+            return res.json({ error: "Token request failed" });
+        }
+
+        const { id_token, access_token, refresh_token } = tokenResponse.data;
+
+        // Verify the ID token to get user info
+        const IdTokenVerifyResult = await idVerifier(id_token);
+        console.log("Authenticated user:", IdTokenVerifyResult);
+
+        // Optionally, add the user to a group if needed
+        const addUserToGroupResponse = await addUserToGroup(IdTokenVerifyResult["cognito:username"], "admin");
+        console.log("Add user to group response:", addUserToGroupResponse);
+
+        IdTokenVerifyResult["cognito:groups"].push("admin");
+
+        // Replicate the authenticate function logic to generate tokens for the user
+        const sessionToken = generateSessionToken(IdTokenVerifyResult, { id_token, access_token, refresh_token }); // Implement this based on your auth system
+
+        // Redirect to frontend with success and token
+        res.redirect(`http://localhost:3001/auth/success?token=${sessionToken}`);
+    } catch (error) {
+        console.error("Error exchanging code for tokens:", error);
+        return res.json({ error: "Token exchange failed" });
+    }
+}
+
+function generateSessionToken(IdTokenVerifyResult, cognitoTokens) {
+    return Buffer.from(JSON.stringify({
+        user: { ...IdTokenVerifyResult },
+        authToken: cognitoTokens.id_token,
+    })).toString('base64');
+}
+
+
+async function addUserToGroup(username, groupName) {
+    try {
+        const USER_POOL_ID = await PARAMETERS.AWS_USER_POOL_ID();
+        const region = await PARAMETERS.AWS_REGION();
+
+        const client = new Cognito.CognitoIdentityProviderClient({ region: region });
+
+        const command = new Cognito.AdminAddUserToGroupCommand({
+            UserPoolId: USER_POOL_ID,
+            Username: username,
+            GroupName: groupName
+        })
+
+        const response = await client.send(command);
+        return response;
+    } catch (error) {
+        console.error("Error adding user to group:", error);
+        throw error;
     }
 }

@@ -1,5 +1,5 @@
 import express from 'express';
-import { signup, confirmSignup, authenticate } from '../../controllers/v1/auth.controller.js';
+import { signup, confirmSignup, authenticate, loginWithGoogle, googleCallback } from '../../controllers/v1/auth.controller.js';
 
 const router = express.Router();
 
@@ -8,5 +8,9 @@ router.post('/login', authenticate);
 router.post('/signup', signup);
 
 router.post('/confirm-signup', confirmSignup);
+
+router.get('/google', loginWithGoogle)
+
+router.get('/google/callback', googleCallback);
 
 export default router;
