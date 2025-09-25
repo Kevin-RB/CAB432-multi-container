@@ -14,7 +14,7 @@ export const authenticateToken = async (req, res, next) => {
     try {
         const response = await idVerifier(token);
         const isEmailVerified = response.email_verified === true;
-        
+
         if (!isEmailVerified) {
             console.log('Email not verified for user:', response.username);
             return res.status(403).json({ error: "Email not verified" });
@@ -24,7 +24,7 @@ export const authenticateToken = async (req, res, next) => {
             username: response['cognito:username'],
             email: response.email,
             userId: response.sub,
-            admin: response['custom:admin'] === 'true' || false,
+            roles: response['cognito:groups'] || [],
         };
         next();
     } catch (err) {
@@ -35,10 +35,10 @@ export const authenticateToken = async (req, res, next) => {
 
 // Middleware to verify admin role
 export const verifyAdmin = (req, res, next) => {
-    if (req.user && req.user.admin) {
+    if (req.user && req.user.roles.includes("admin")) {
         next();
     } else {
-        console.log(`Admin verification failed at URL ${req.url}`);
-        return res.sendStatus(401);
+        console.log("Forbidden: Admins only");
+        return res.status(403).json({ message: "Forbidden: Admins only" });
     }
 };

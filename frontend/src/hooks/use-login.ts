@@ -13,7 +13,9 @@ return useMutation({
     },
     onSuccess: (data) => {
       // Handle successful login
+      console.log("Login successful:", data);
       localStorage.setItem("token", data.authToken);
+      localStorage.setItem("Roles", JSON.stringify(data?.user?.["cognito:groups"]));
       navigate({to: '/app'});
     },
     onError: (error) => {
@@ -22,18 +24,3 @@ return useMutation({
     },
   })
 };
-
-// Only for testing purposes
-
-// const fakeLogin = async (data: LoginSchema) => {
-//   // Simulate a login API call
-//   return new Promise((resolve, reject) => {
-//     setTimeout(() => {
-//       if (data.username === "user" && data.password === "pass") {
-//         resolve({ user: { id: 1, name: "John Doe" } });
-//       } else {
-//         reject(new Error("Invalid credentials"));
-//       }
-//     }, 2000);
-//   });
-// };

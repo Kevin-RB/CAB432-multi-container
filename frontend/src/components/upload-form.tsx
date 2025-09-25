@@ -6,12 +6,15 @@ import { useForm, type SubmitHandler } from "react-hook-form"
 import { receiptUploadSchema, type ReceiptUploadSchema } from "@/schemas/receipt"
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useUpload } from "@/hooks/use-upload"
+import { useIsAdmin } from "@/hooks/use-role"
 
 export function UploadForm({
   className,
   ...props
 }: React.ComponentProps<"form">) {
+  const isAdmin = useIsAdmin()
   const uploadMutation = useUpload();
+
   const {
     register,
     handleSubmit,
@@ -32,6 +35,13 @@ export function UploadForm({
     }
   };
 
+  if (!isAdmin) {
+    return (<div>
+      <h1 className="text-center text-2xl font-bold">Receipt List</h1>
+      <span className="text-zinc-500 text-sm"> (Only admins can upload receipts)</span>
+    </div>);
+  }
+
   return (
     <form className={cn("flex flex-col gap-6 min-w-sm", className)} {...props} onSubmit={handleSubmit(onSubmit)}>
       <div className="flex flex-col items-center gap-2 text-center">
@@ -43,16 +53,16 @@ export function UploadForm({
       <div className="grid gap-6">
         <div className="grid gap-3">
           <Label htmlFor="receipt-image">Receipt Image</Label>
-          <Input 
-            id="receipt-image" 
-            type="file" 
+          <Input
+            id="receipt-image"
+            type="file"
             accept="image/jpeg,image/png,image/jpg"
-            {...register("receipt-image")} 
+            {...register("receipt-image")}
           />
           {errors["receipt-image"] && (
             <p className="text-red-500">
-              {typeof errors["receipt-image"]?.message === 'string' 
-                ? errors["receipt-image"].message 
+              {typeof errors["receipt-image"]?.message === 'string'
+                ? errors["receipt-image"].message
                 : 'Invalid file selected'
               }
             </p>
@@ -63,9 +73,9 @@ export function UploadForm({
             </p>
           )}
         </div>
-        <Button 
-          disabled={uploadMutation.isPending || !watchedFile || watchedFile.length === 0} 
-          type="submit" 
+        <Button
+          disabled={uploadMutation.isPending || !watchedFile || watchedFile.length === 0}
+          type="submit"
           className="w-full cursor-pointer"
         >
           {uploadMutation.isPending ? "Uploading..." : "Upload Receipt"}
