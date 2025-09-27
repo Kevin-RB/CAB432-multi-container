@@ -19,7 +19,7 @@ import { useRef } from 'react'
 import { Spinner } from "./ui/kibo-ui/spinner"
 
 
-export function OTPForm({ onSubmit, isPending, isError, errorMessage }: { onSubmit: (data: OTPConfirmationType) => void, isPending?: boolean, isError?: boolean, errorMessage?: string }) {
+export function OTPForm({ onSubmit, isPending, isError, errorMessage, description }: { onSubmit: (data: OTPConfirmationType) => void, isPending?: boolean, isError?: boolean, errorMessage?: string, description?: string }) {
     const formRef = useRef<HTMLFormElement>(null)
 
     const form = useForm<OTPConfirmationType>({
@@ -58,9 +58,11 @@ export function OTPForm({ onSubmit, isPending, isError, errorMessage }: { onSubm
                                 </FormMessage>
                             ) : <FormMessage />}
                             {isPending && <span className="w-full flex items-center justify-center"><Spinner /></span>}
-                            <FormDescription>
-                                Enter the 6-digit code we sent to your email.
-                            </FormDescription>
+                            {description && (
+                                <FormDescription>
+                                    {description}
+                                </FormDescription>
+                            )}
                         </FormItem>
                     )}
                 />

@@ -36,6 +36,7 @@ function RouteComponent() {
           isPending={confirmationMutation.isPending}
           isError={confirmationMutation.isError}
           errorMessage={confirmationMutation.error?.message}
+          description='Enter the 6-digit code we sent to your email.'
         />
       </div>
     </section >
