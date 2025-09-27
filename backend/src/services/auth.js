@@ -48,3 +48,73 @@ export const awsAuthenticate = async (username, password) => {
 
     return client.send(command);
 }
+
+export const assoasiateSoftwareToken = async (session) => {
+    const region = await PARAMETERS.AWS_REGION();
+    const client = new Cognito.CognitoIdentityProviderClient({
+        region: region
+    })
+    const command = new Cognito.AssociateSoftwareTokenCommand({
+        Session: session
+    })
+
+    return client.send(command);
+}
+
+export const verifySoftwareToken = async (session, authCode) => {
+    const region = await PARAMETERS.AWS_REGION();
+    const client = new Cognito.CognitoIdentityProviderClient({
+        region: region
+    })
+    const command = new Cognito.VerifySoftwareTokenCommand({
+        Session: session,
+        UserCode: authCode,
+        FriendlyDeviceName: "User's device"
+    })
+
+    return client.send(command);
+}
+
+export async function addUserToGroup(username, groupName) {
+    try {
+        const USER_POOL_ID = await PARAMETERS.AWS_USER_POOL_ID();
+        const region = await PARAMETERS.AWS_REGION();
+
+        const client = new Cognito.CognitoIdentityProviderClient({ region: region });
+
+        const command = new Cognito.AdminAddUserToGroupCommand({
+            UserPoolId: USER_POOL_ID,
+            Username: username,
+            GroupName: groupName
+        })
+
+        const response = await client.send(command);
+        return response;
+    } catch (error) {
+        console.error("Error adding user to group:", error);
+        throw error;
+    }
+}
+
+export const respondToMfaSetupChallenge = async (session, user) => {
+    try {
+        const region = await PARAMETERS.AWS_REGION();
+        const clientId = await PARAMETERS.AWS_CLIENT_ID();
+        const clientSecret = await SECRET_STORE.AWS_CLIENT_SECRET();
+        const client = new Cognito.CognitoIdentityProviderClient({ region: region });
+
+        const command = new Cognito.RespondToAuthChallengeCommand({
+            ChallengeName: "MFA_SETUP",
+            ClientId: clientId,
+            Session: session,
+            ChallengeResponses: {
+                "USERNAME": user,
+                "SECRET_HASH": secretHash(clientId, clientSecret, user)
+            }
+        })
+        return await client.send(command);
+    } catch (error) {
+        console.error("Error responding to auth challenge:", error);
+        throw error;
+    }
+}

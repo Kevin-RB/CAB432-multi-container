@@ -12,17 +12,15 @@ import {
     FormItem,
     FormMessage,
 } from "@/components/ui/form"
-import { useForm, type SubmitHandler } from 'react-hook-form'
+import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { OTPConfirmationSchema, type OTPConfirmationType } from '@/schemas/auth'
 import { useRef } from 'react'
-import { useConfirmSignup } from "@/hooks/use-signup"
 import { Spinner } from "./ui/kibo-ui/spinner"
 
 
-export function OTPForm() {
+export function OTPForm({ onSubmit, isPending, isError, errorMessage }: { onSubmit: (data: OTPConfirmationType) => void, isPending?: boolean, isError?: boolean, errorMessage?: string }) {
     const formRef = useRef<HTMLFormElement>(null)
-    const confirmationMutation = useConfirmSignup()
 
     const form = useForm<OTPConfirmationType>({
         resolver: zodResolver(OTPConfirmationSchema),
@@ -31,21 +29,6 @@ export function OTPForm() {
         },
     })
 
-    const onSubmit: SubmitHandler<OTPConfirmationType> = async (data) => {
-        const user = sessionStorage.getItem('pendingUser')
-        if (!user) {
-            throw new Error("Something went wrong. Please restart the signup process.");
-        }
-        try {
-            const { username, email } = JSON.parse(user);
-            if (!username) {
-                throw new Error("No pending username found in sessionStorage.");
-            }
-            await confirmationMutation.mutateAsync({ username, email, code: data.pin });
-        } catch (error) {
-            console.error("Error during OTP submission:", error);
-        }
-    }
     return (
         <Form  {...form}>
             <form ref={formRef} onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
@@ -55,7 +38,7 @@ export function OTPForm() {
                     render={({ field }) => (
                         <FormItem className="space-y-3 place-items-center">
                             <FormControl>
-                                <InputOTP disabled={confirmationMutation.isPending} {...field} onComplete={() => { formRef.current?.requestSubmit() }} maxLength={6}>
+                                <InputOTP disabled={isPending} {...field} onComplete={() => { formRef.current?.requestSubmit() }} maxLength={6}>
                                     <InputOTPGroup>
                                         <InputOTPSlot index={0} />
                                         <InputOTPSlot index={1} />
@@ -69,12 +52,12 @@ export function OTPForm() {
                                     </InputOTPGroup>
                                 </InputOTP>
                             </FormControl>
-                            {confirmationMutation.isError ? (
+                            {isError ? (
                                 <FormMessage>
-                                    {confirmationMutation.error.response?.data.error || 'An error occurred. Please try again.'}
+                                    {errorMessage || 'An error occurred. Please try again.'}
                                 </FormMessage>
                             ) : <FormMessage />}
-                            {confirmationMutation.isPending && <span className="w-full flex items-center justify-center"><Spinner /></span>}
+                            {isPending && <span className="w-full flex items-center justify-center"><Spinner /></span>}
                             <FormDescription>
                                 Enter the 6-digit code we sent to your email.
                             </FormDescription>

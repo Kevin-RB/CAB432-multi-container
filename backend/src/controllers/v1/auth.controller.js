@@ -1,6 +1,6 @@
 import Cognito from "@aws-sdk/client-cognito-identity-provider"
 import { secretHash } from "../../utils/auth-utils.js";
-import { awsAuthenticate, idVerifier } from "../../services/auth.js";
+import { addUserToGroup, assoasiateSoftwareToken, awsAuthenticate, idVerifier, respondToMfaSetupChallenge, verifySoftwareToken } from "../../services/auth.js";
 import { PARAMETERS } from "../../services/paramenter-manager.js";
 import { SECRET_STORE } from "../../services/secrets-manager.js";
 import axios from "axios";
@@ -9,17 +9,64 @@ export const authenticate = async (req, res) => {
     try {
         console.log("Getting auth token");
         const { username, password } = req.body;
-        const response = await awsAuthenticate(username, password);
+        const initiateAuthResponse = await awsAuthenticate(username, password);
+        console.log("Authentication response:", initiateAuthResponse);
 
-        const IdToken = response.AuthenticationResult.IdToken;
-        const IdTokenVerifyResult = await idVerifier(IdToken);
+        // Handle different challenge types
+        switch (initiateAuthResponse.ChallengeName) {
+            case 'MFA_SETUP':
+                // First time MFA setup
+                const associateTokenResponse = await assoasiateSoftwareToken(initiateAuthResponse.Session);
+                console.log("Associate software token response:", associateTokenResponse);
 
-        res.json({
-            message: "Authentication successful",
-            authToken: IdToken,
-            user: IdTokenVerifyResult,
-            data: response
-        });
+                // Generate otpauth URL for TOTP apps
+                const issuer = "cosmic-receipt";
+                const user = initiateAuthResponse.ChallengeParameters.USER_ID_FOR_SRP ?? username;
+                const label = `${issuer}:${user}`;
+                const otpauth = `otpauth://totp/${encodeURIComponent(label)}?` + new URLSearchParams({
+                    secret: associateTokenResponse.SecretCode,
+                    issuer: issuer,
+                }).toString();
+
+                return res.json({
+                    challengeName: 'MFA_SETUP',
+                    message: "TOTP setup initiated",
+                    otpauth,
+                    userIdForSRP: initiateAuthResponse.ChallengeParameters.USER_ID_FOR_SRP,
+                    session: associateTokenResponse.Session,
+                });
+
+            case 'SOFTWARE_TOKEN_MFA':
+                // User has MFA already set up, needs to provide TOTP code
+                return res.json({
+                    challengeName: 'SOFTWARE_TOKEN_MFA',
+                    message: "Please provide your TOTP code",
+                    session: initiateAuthResponse.Session,
+                    userIdForSRP: initiateAuthResponse.ChallengeParameters.USER_ID_FOR_SRP,
+                });
+
+            case undefined:
+            case null:
+                // No MFA challenge - authentication successful
+                if (initiateAuthResponse.AuthenticationResult) {
+                    return res.json({
+                        message: "Authentication successful",
+                        success: true,
+                        tokens: initiateAuthResponse.AuthenticationResult
+                    });
+                }
+                break;
+
+            default:
+                console.log(`Unhandled challenge: ${initiateAuthResponse.ChallengeName}`);
+                return res.status(400).json({
+                    error: `Unhandled authentication challenge: ${initiateAuthResponse.ChallengeName}`
+                });
+        }
+
+        // Fallback for unexpected response structure
+        return res.status(400).json({ error: "Unexpected authentication response" });
+
     } catch (error) {
         console.error("Error during authentication:", error);
         res.status(500).json({ error: "Internal server error" });
@@ -182,6 +229,53 @@ export const googleCallback = async (req, res) => {
     }
 }
 
+export const verifyTotpAndFinishSetup = async (req, res) => {
+    const { authCode, session, userIdForSRP } = req.body;
+    console.log("Verifying TOTP code:", authCode);
+    if (!authCode) {
+        return res.status(400).json({ error: "TOTP code is required" });
+    }
+    console.log("Using session:", session);
+    if (!session) {
+        return res.status(400).json({ error: "No MFA session found. Please login again." });
+    }
+    console.log("User ID for SRP:", userIdForSRP);
+    if (!userIdForSRP) {
+        return res.status(400).json({ error: "No user identifier found. Please login again." });
+    }
+
+    try {
+        const verifyResponse = await verifySoftwareToken(session, authCode);
+        console.log("TOTP verification response:", verifyResponse);
+
+        if (verifyResponse.Status !== 'SUCCESS') {
+            return res.status(400).json({ error: "Invalid TOTP code" });
+        }
+
+        const { Session: verifiedSession } = verifyResponse
+
+        const mfaAuthChallengeResponse = await respondToMfaSetupChallenge(verifiedSession, userIdForSRP);
+        console.log("MFA Auth Challenge response:", mfaAuthChallengeResponse);
+        const idToken = mfaAuthChallengeResponse.AuthenticationResult.IdToken;
+
+        const userDetails = await idVerifier(idToken);
+        console.log("User details after MFA setup:", userDetails);
+
+        const response = {
+            message: "TOTP verified and setup complete",
+            username: userDetails['cognito:username'],
+            roles: userDetails['cognito:groups'] || [],
+            idToken: idToken
+        }
+
+        res.json(response);
+    } catch (error) {
+        console.error("Error verifying TOTP code:", error);
+        return res.status(400).json({ error: error.message || "TOTP verification failed" });
+    }
+}
+
+
 // Helper functions with environment detection
 async function getFrontendUrl(req) {
     // Check if running locally based on host
@@ -225,26 +319,4 @@ function generateSessionToken(IdTokenVerifyResult, cognitoTokens) {
         user: { ...IdTokenVerifyResult },
         authToken: cognitoTokens.id_token,
     })).toString('base64');
-}
-
-
-async function addUserToGroup(username, groupName) {
-    try {
-        const USER_POOL_ID = await PARAMETERS.AWS_USER_POOL_ID();
-        const region = await PARAMETERS.AWS_REGION();
-
-        const client = new Cognito.CognitoIdentityProviderClient({ region: region });
-
-        const command = new Cognito.AdminAddUserToGroupCommand({
-            UserPoolId: USER_POOL_ID,
-            Username: username,
-            GroupName: groupName
-        })
-
-        const response = await client.send(command);
-        return response;
-    } catch (error) {
-        console.error("Error adding user to group:", error);
-        throw error;
-    }
 }
