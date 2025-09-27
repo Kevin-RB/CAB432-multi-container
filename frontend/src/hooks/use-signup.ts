@@ -42,7 +42,7 @@ export const useConfirmSignup = () => {
     onSuccess: (data) => {
       console.log("Confirmation successful:", data);
       sessionStorage.removeItem('pendingUser');
-      navigate({to: '/app'});
+      navigate({to: '/'});
     },
     onError: (error:AxiosError<{ error: string }>) => {
       console.error("Confirmation failed:", error);

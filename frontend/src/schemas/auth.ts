@@ -20,6 +20,44 @@ export const OTPConfirmationSchema = z.object({
     message: "Your one-time password must be 6 characters.",
   }),
 })
+
+// Base authentication response
+const baseAuthResponseSchema = z.object({
+  message: z.string(),
+})
+
+// MFA Setup response (first time)
+export const mfaSetupResponseSchema = baseAuthResponseSchema.extend({
+  challengeName: z.literal('MFA_SETUP'),
+  otpauth: z.string(),
+  userIdForSRP: z.string(),
+  session: z.string(),
+})
+
+// MFA Code required response (existing users)
+export const mfaCodeRequiredResponseSchema = baseAuthResponseSchema.extend({
+  challengeName: z.literal('SOFTWARE_TOKEN_MFA'),
+  session: z.string(),
+  userIdForSRP: z.string(),
+})
+
+// Union of all possible authentication responses
+export const authResponseSchema = z.discriminatedUnion('challengeName', [
+  mfaSetupResponseSchema,
+  mfaCodeRequiredResponseSchema,
+])
+
+// Success authentication response
+export const successAuthResponseSchema = baseAuthResponseSchema.extend({
+  username: z.string(),
+  roles: z.array(z.string()),
+  idToken: z.string()
+})
+
+export type SuccessAuthResponseType = z.infer<typeof successAuthResponseSchema>
+export type AuthResponseType = z.infer<typeof authResponseSchema>
+export type MfaSetupResponseType = z.infer<typeof mfaSetupResponseSchema>
+export type MfaCodeRequiredResponseType = z.infer<typeof mfaCodeRequiredResponseSchema>
 export type OTPConfirmationType = z.infer<typeof OTPConfirmationSchema>
 export type LoginSchema = z.infer<typeof loginSchema>
 export type SignupSchema = z.infer<typeof signupSchema>

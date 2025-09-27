@@ -15,7 +15,9 @@ import { Route as authIndexRouteImport } from './routes/(auth)/index'
 import { Route as authSignupIndexRouteImport } from './routes/(auth)/signup/index'
 import { Route as AppReceiptReceiptIdRouteImport } from './routes/app/receipt/$receiptId'
 import { Route as authSignupConfirmationRouteImport } from './routes/(auth)/signup/confirmation'
+import { Route as authAuthTotpConfirmRouteImport } from './routes/(auth)/auth/totp-confirm'
 import { Route as authAuthSuccessRouteImport } from './routes/(auth)/auth/success'
+import { Route as authAuthMfaVerifyRouteImport } from './routes/(auth)/auth/mfa-verify'
 
 const AppRouteRoute = AppRouteRouteImport.update({
   id: '/app',
@@ -47,9 +49,19 @@ const authSignupConfirmationRoute = authSignupConfirmationRouteImport.update({
   path: '/signup/confirmation',
   getParentRoute: () => rootRouteImport,
 } as any)
+const authAuthTotpConfirmRoute = authAuthTotpConfirmRouteImport.update({
+  id: '/(auth)/auth/totp-confirm',
+  path: '/auth/totp-confirm',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const authAuthSuccessRoute = authAuthSuccessRouteImport.update({
   id: '/(auth)/auth/success',
   path: '/auth/success',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const authAuthMfaVerifyRoute = authAuthMfaVerifyRouteImport.update({
+  id: '/(auth)/auth/mfa-verify',
+  path: '/auth/mfa-verify',
   getParentRoute: () => rootRouteImport,
 } as any)
 
@@ -57,7 +69,9 @@ export interface FileRoutesByFullPath {
   '/app': typeof AppRouteRouteWithChildren
   '/': typeof authIndexRoute
   '/app/': typeof AppIndexRoute
+  '/auth/mfa-verify': typeof authAuthMfaVerifyRoute
   '/auth/success': typeof authAuthSuccessRoute
+  '/auth/totp-confirm': typeof authAuthTotpConfirmRoute
   '/signup/confirmation': typeof authSignupConfirmationRoute
   '/app/receipt/$receiptId': typeof AppReceiptReceiptIdRoute
   '/signup': typeof authSignupIndexRoute
@@ -65,7 +79,9 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof authIndexRoute
   '/app': typeof AppIndexRoute
+  '/auth/mfa-verify': typeof authAuthMfaVerifyRoute
   '/auth/success': typeof authAuthSuccessRoute
+  '/auth/totp-confirm': typeof authAuthTotpConfirmRoute
   '/signup/confirmation': typeof authSignupConfirmationRoute
   '/app/receipt/$receiptId': typeof AppReceiptReceiptIdRoute
   '/signup': typeof authSignupIndexRoute
@@ -75,7 +91,9 @@ export interface FileRoutesById {
   '/app': typeof AppRouteRouteWithChildren
   '/(auth)/': typeof authIndexRoute
   '/app/': typeof AppIndexRoute
+  '/(auth)/auth/mfa-verify': typeof authAuthMfaVerifyRoute
   '/(auth)/auth/success': typeof authAuthSuccessRoute
+  '/(auth)/auth/totp-confirm': typeof authAuthTotpConfirmRoute
   '/(auth)/signup/confirmation': typeof authSignupConfirmationRoute
   '/app/receipt/$receiptId': typeof AppReceiptReceiptIdRoute
   '/(auth)/signup/': typeof authSignupIndexRoute
@@ -86,7 +104,9 @@ export interface FileRouteTypes {
     | '/app'
     | '/'
     | '/app/'
+    | '/auth/mfa-verify'
     | '/auth/success'
+    | '/auth/totp-confirm'
     | '/signup/confirmation'
     | '/app/receipt/$receiptId'
     | '/signup'
@@ -94,7 +114,9 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/app'
+    | '/auth/mfa-verify'
     | '/auth/success'
+    | '/auth/totp-confirm'
     | '/signup/confirmation'
     | '/app/receipt/$receiptId'
     | '/signup'
@@ -103,7 +125,9 @@ export interface FileRouteTypes {
     | '/app'
     | '/(auth)/'
     | '/app/'
+    | '/(auth)/auth/mfa-verify'
     | '/(auth)/auth/success'
+    | '/(auth)/auth/totp-confirm'
     | '/(auth)/signup/confirmation'
     | '/app/receipt/$receiptId'
     | '/(auth)/signup/'
@@ -112,7 +136,9 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   AppRouteRoute: typeof AppRouteRouteWithChildren
   authIndexRoute: typeof authIndexRoute
+  authAuthMfaVerifyRoute: typeof authAuthMfaVerifyRoute
   authAuthSuccessRoute: typeof authAuthSuccessRoute
+  authAuthTotpConfirmRoute: typeof authAuthTotpConfirmRoute
   authSignupConfirmationRoute: typeof authSignupConfirmationRoute
   authSignupIndexRoute: typeof authSignupIndexRoute
 }
@@ -161,11 +187,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof authSignupConfirmationRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/(auth)/auth/totp-confirm': {
+      id: '/(auth)/auth/totp-confirm'
+      path: '/auth/totp-confirm'
+      fullPath: '/auth/totp-confirm'
+      preLoaderRoute: typeof authAuthTotpConfirmRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/(auth)/auth/success': {
       id: '/(auth)/auth/success'
       path: '/auth/success'
       fullPath: '/auth/success'
       preLoaderRoute: typeof authAuthSuccessRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/(auth)/auth/mfa-verify': {
+      id: '/(auth)/auth/mfa-verify'
+      path: '/auth/mfa-verify'
+      fullPath: '/auth/mfa-verify'
+      preLoaderRoute: typeof authAuthMfaVerifyRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
@@ -188,7 +228,9 @@ const AppRouteRouteWithChildren = AppRouteRoute._addFileChildren(
 const rootRouteChildren: RootRouteChildren = {
   AppRouteRoute: AppRouteRouteWithChildren,
   authIndexRoute: authIndexRoute,
+  authAuthMfaVerifyRoute: authAuthMfaVerifyRoute,
   authAuthSuccessRoute: authAuthSuccessRoute,
+  authAuthTotpConfirmRoute: authAuthTotpConfirmRoute,
   authSignupConfirmationRoute: authSignupConfirmationRoute,
   authSignupIndexRoute: authSignupIndexRoute,
 }
