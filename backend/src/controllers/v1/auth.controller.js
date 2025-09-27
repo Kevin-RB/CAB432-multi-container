@@ -164,18 +164,18 @@ export const googleCallback = async (req, res) => {
         const addUserToGroupResponse = await addUserToGroup(IdTokenVerifyResult["cognito:username"], "admin");
         console.log("Add user to group response:", addUserToGroupResponse);
 
-        if (!IdTokenVerifyResult["cognito:groups"].includes("admin")){
+        if (!IdTokenVerifyResult["cognito:groups"].includes("admin")) {
             IdTokenVerifyResult["cognito:groups"].push("admin");
         }
 
         // Replicate the authenticate function logic to generate tokens for the user
         const sessionToken = generateSessionToken(IdTokenVerifyResult, { id_token, access_token, refresh_token }); // Implement this based on your auth system
-
-        // Get frontend URL from parameter store or environment variable
         const frontendUrl = await getFrontendUrl(req);
 
-        // Redirect to frontend with success and token
-        res.redirect(`${frontendUrl}/auth/success?token=${sessionToken}`);
+        // Get frontend URL from parameter store or environment variable
+        const redirectUrl = `${frontendUrl}/auth/success?token=${sessionToken}`;
+
+        res.redirect(redirectUrl);
     } catch (error) {
         console.error("Error exchanging code for tokens:", error);
         return res.json({ error: "Token exchange failed" });
@@ -193,21 +193,31 @@ async function getFrontendUrl(req) {
         return 'http://localhost:3001';
     }
 
-    return PARAMETERS.DOMAIN_NAME();
+    // Fix: Add the https:// protocol
+    const domainName = await PARAMETERS.DOMAIN_NAME();
+    const fullUrl = `https://${domainName}`;
+    console.log("Frontend URL constructed:", fullUrl);
+    return fullUrl;
 }
 
 async function getRedirectUri(req) {
-    // Check if running locally
-    const host = req.get('host');
+    console.log("Determining redirect URI based on environment");
+    // Check if running locally based on host
+    const host = req.get('host'); req.hostname;
+    const callbackPath = '/api/v1/auth/google/callback';
+
     const isLocal = host.includes('localhost') || host.includes('127.0.0.1');
 
     if (isLocal) {
         // For local development
-        return `${req.protocol}://${req.get('host')}/api/v1/auth/google/callback`;
+        return `http://${host}${callbackPath}`;
     }
 
     const baseUrl = await PARAMETERS.DOMAIN_NAME();
-    return `${baseUrl}/api/v1/auth/google/callback`;
+    const callbackUrl = new URL(callbackPath, `https://${baseUrl}`);
+    console.log("Callback URL for production:", callbackUrl.toString());
+
+    return callbackUrl.toString();
 }
 
 function generateSessionToken(IdTokenVerifyResult, cognitoTokens) {

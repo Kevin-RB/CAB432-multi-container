@@ -6,9 +6,15 @@ const getDomain = () => {
   if (import.meta.env.VITE_API_BASE_URL) {
     return import.meta.env.VITE_API_BASE_URL;
   }
-  // Return current origin with port 3000 for API
-  return `${window.location.protocol}//${window.location.hostname}:3000`;
-}
+  
+  const hostname = window.location.hostname;
+
+  if (hostname === 'localhost') {
+      return `${window.location.protocol}//${hostname}:3000`;
+  }
+  // fallback for local dev
+  return "http://localhost:3000";
+};
 
 // Create axios instance with base configuration for internal API
 const api = axios.create({

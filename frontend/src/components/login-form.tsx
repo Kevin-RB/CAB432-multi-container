@@ -37,9 +37,12 @@ export function LoginForm({
     try {
       // Get the Google OAuth URL from your backend
       const response = await api.get('/auth/google');
-
-      if (response.statusText !== 'OK') throw new Error('Failed to get Google OAuth URL');
-
+      console.log("Google OAuth response:", response);
+      // Check for successful status codes (2xx and 3xx)
+      if (response.status < 200 || response.status >= 400) {
+        throw new Error('Failed to get Google OAuth URL');
+      }
+      
       const { authUrl } = response.data;
       console.log("Redirecting to:", authUrl);
       // Redirect the user to the Google OAuth URL
