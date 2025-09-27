@@ -15,7 +15,7 @@ export const Route = createFileRoute('/app/receipt/$receiptId')({
 function ReceiptComponent() {
     const receiptData = Route.useLoaderData()
 
-    if (receiptData.statusText !== "OK") return <div>Something went wrong...</div>
+    if (receiptData.status < 200 || receiptData.status >= 300) return <div>Something went wrong...</div>
 
     const data: ReceiptProcessSchema = receiptData.data.data
     

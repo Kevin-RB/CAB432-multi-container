@@ -11,6 +11,8 @@ export const PARAMETERS = {
   AWS_CLIENT_ID: async () => await fetchParameters("aws_client_id"),
   AWS_REGION: async () => await fetchParameters("aws_region"),
   AWS_CLIENT_SECRET_NAME: async () => await fetchParameters("aws_client_secret_name"),
+  DOMAIN_NAME: async () => await fetchParameters("domain-name"),
+  COGNITO_POOL_DOMAIN: async () => await fetchParameters("cognito-pool-domain"),
 }
 
 const fetchParameters = async (parameter) => {
