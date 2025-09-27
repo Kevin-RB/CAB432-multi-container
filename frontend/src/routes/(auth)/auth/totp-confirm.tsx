@@ -15,6 +15,10 @@ export const Route = createFileRoute('/(auth)/auth/totp-confirm')({
 function RouteComponent() {
     const { otpauth, session, userIdForSRP } = Route.useSearch()
     const totpMutation = useMfaSetup()
+    console.log("TOTP Confirm Route loaded with otpauth:", otpauth);
+
+    const decodedOtpauth = decodeURIComponent(otpauth);
+    console.log("Decoded otpauth URL:", decodedOtpauth);
 
     const onSubmit: SubmitHandler<OTPConfirmationType> = async (data) => {
         console.log("Submitting TOTP code");
@@ -34,9 +38,12 @@ function RouteComponent() {
                     isPending={totpMutation.isPending}
                     isError={totpMutation.isError}
                     errorMessage={totpMutation.error?.message}
+                    description='Enter the 6-digit code from your authenticator app.'
                 />
                 <div className="flex flex-col items-center mt-10">
-                    <QRCode data={otpauth} className='size-40' />
+                    <div className="w-64 h-64 bg-white p-4" >
+                        <QRCode data={decodedOtpauth} background="#eee" foreground="#111" />
+                    </div>
                     <span className="mt-4 text-sm text-gray-500">Use an authenticator app like Google Authenticator or Authy.</span>
                 </div>
             </div>

@@ -33,6 +33,7 @@ function RouteComponent() {
           isPending={mfaConfirmMutation.isPending}
           isError={mfaConfirmMutation.isError}
           errorMessage={mfaConfirmMutation.error?.message}
+          description='Enter the 6-digit code from your authenticator app.'
         />
       </div>
     </section>
