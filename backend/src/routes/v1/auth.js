@@ -1,5 +1,5 @@
 import express from 'express';
-import { signup, confirmSignup, authenticate, loginWithGoogle, googleCallback, verifyTotpAndFinishSetup } from '../../controllers/v1/auth.controller.js';
+import { signup, confirmSignup, authenticate, loginWithGoogle, googleCallback, verifyTotpAndFinishSetup, confirmMfa } from '../../controllers/v1/auth.controller.js';
 
 const router = express.Router();
 
@@ -8,6 +8,8 @@ router.post('/login', authenticate);
 router.post('/signup', signup);
 
 router.post('/verify-totp', verifyTotpAndFinishSetup);
+
+router.post('/mfa-verify', confirmMfa);
 
 router.post('/confirm-signup', confirmSignup);
 

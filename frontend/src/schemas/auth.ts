@@ -38,7 +38,7 @@ export const mfaSetupResponseSchema = baseAuthResponseSchema.extend({
 export const mfaCodeRequiredResponseSchema = baseAuthResponseSchema.extend({
   challengeName: z.literal('SOFTWARE_TOKEN_MFA'),
   session: z.string(),
-  userIdForSRP: z.string().optional(),
+  userIdForSRP: z.string(),
 })
 
 // Union of all possible authentication responses

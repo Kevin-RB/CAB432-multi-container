@@ -1,6 +1,6 @@
 import Cognito from "@aws-sdk/client-cognito-identity-provider"
 import { secretHash } from "../../utils/auth-utils.js";
-import { addUserToGroup, assoasiateSoftwareToken, awsAuthenticate, idVerifier, respondToMfaSetupChallenge, verifySoftwareToken } from "../../services/auth.js";
+import { addUserToGroup, assoasiateSoftwareToken, awsAuthenticate, idVerifier, respondToMFAChallenge, respondToMfaSetupChallenge, verifySoftwareToken } from "../../services/auth.js";
 import { PARAMETERS } from "../../services/paramenter-manager.js";
 import { SECRET_STORE } from "../../services/secrets-manager.js";
 import axios from "axios";
@@ -275,6 +275,35 @@ export const verifyTotpAndFinishSetup = async (req, res) => {
     }
 }
 
+export const confirmMfa = async (req, res) => {
+    const { authCode, session, userIdForSRP } = req.body;
+
+    if (!authCode || !session || !userIdForSRP) {
+        return res.status(400).json({ error: "All fields are required" });
+    }
+
+    try {
+        const response = await respondToMFAChallenge(session, userIdForSRP, authCode);
+        console.log("MFA Challenge response:", response);
+        
+        const { IdToken } = response.AuthenticationResult;
+
+        const userDetails = await idVerifier(IdToken);
+        console.log("User details after MFA confirmation:", userDetails);
+
+        const finalResponse = {
+            message: "MFA confirmed successfully",
+            username: userDetails['cognito:username'],
+            roles: userDetails['cognito:groups'] || [],
+            idToken: IdToken,
+        }
+
+        res.json(finalResponse);
+    } catch (error) {
+        console.error("Error confirming MFA:", error);
+        return res.status(400).json({ error: error.message || "MFA confirmation failed" });
+    }
+}
 
 // Helper functions with environment detection
 async function getFrontendUrl(req) {

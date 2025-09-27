@@ -118,3 +118,27 @@ export const respondToMfaSetupChallenge = async (session, user) => {
         throw error;
     }
 }
+
+export const respondToMFAChallenge = async (session, user, authCode) => {
+    try {
+        const region = await PARAMETERS.AWS_REGION();
+        const clientId = await PARAMETERS.AWS_CLIENT_ID();
+        const clientSecret = await SECRET_STORE.AWS_CLIENT_SECRET();
+        const client = new Cognito.CognitoIdentityProviderClient({ region: region });
+
+        const command = new Cognito.RespondToAuthChallengeCommand({
+            ChallengeName: "SOFTWARE_TOKEN_MFA",
+            ClientId: clientId,
+            Session: session,
+            ChallengeResponses: {
+                "USERNAME": user,
+                "SECRET_HASH": secretHash(clientId, clientSecret, user),
+                "SOFTWARE_TOKEN_MFA_CODE": authCode
+            }
+        })
+        return await client.send(command);
+    } catch (error) {
+        console.error("Error responding to MFA challenge:", error);
+        throw error;
+    }
+}

@@ -1,10 +1,9 @@
-import { createFileRoute, useNavigate } from '@tanstack/react-router'
+import { createFileRoute } from '@tanstack/react-router'
 import { QRCode } from "@/components/ui/kibo-ui/qr-code";
 import { OTPForm } from '@/components/otp-form';
 import { useMfaSetup } from '@/hooks/use-login';
 import type { SubmitHandler } from 'react-hook-form';
-import { mfaSetupResponseSchema, successAuthResponseSchema, type OTPConfirmationType } from '@/schemas/auth';
-import { storeUserInfo } from '@/lib/store';
+import { mfaSetupResponseSchema, type OTPConfirmationType } from '@/schemas/auth';
 
 const searchSchema = mfaSetupResponseSchema.pick({ userIdForSRP: true, otpauth: true, session: true });
 
@@ -15,25 +14,12 @@ export const Route = createFileRoute('/(auth)/auth/totp-confirm')({
 
 function RouteComponent() {
     const { otpauth, session, userIdForSRP } = Route.useSearch()
-    const navigate = useNavigate({ from: '/auth/totp-confirm' })
     const totpMutation = useMfaSetup()
 
     const onSubmit: SubmitHandler<OTPConfirmationType> = async (data) => {
         console.log("Submitting TOTP code");
         try {
-            const response = await totpMutation.mutateAsync({ authCode: data.pin, session, userIdForSRP });
-            console.log("TOTP submission response:", response);
-            const verifiedResult = successAuthResponseSchema.safeParse(response);
-
-            if (!verifiedResult.success) {
-                console.error("Response validation failed:", verifiedResult.error);
-                return;
-            }
-
-            const { roles, idToken } = verifiedResult.data
-            storeUserInfo(idToken, roles)
-
-            navigate({ to: '/app' });
+            await totpMutation.mutateAsync({ authCode: data.pin, session, userIdForSRP });
         } catch (error) {
             console.error("Error during TOTP submission:", error);
         }
