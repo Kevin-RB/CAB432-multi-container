@@ -106,3 +106,9 @@ backend/.env
 **/.mypy_cache/
 **/.dmypy.json
 **/dmypy.json\
+
+# agentic personal files
+.github/chatmodes/** 
+**/ARCHITECTURE.md
+**/cab432_requirements_updated.md
+**/tasks.md
