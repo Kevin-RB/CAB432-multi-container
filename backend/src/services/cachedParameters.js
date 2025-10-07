@@ -57,6 +57,14 @@ export async function cachedAWSClientSecretName() {
     return cachedParameter('AWS_CLIENT_SECRET_NAME', PARAMETERS.AWS_CLIENT_SECRET_NAME, 3600);
 }
 
+export async function cachedSQSTesseractUrl() {
+    return cachedParameter('SQS_TESSERACT_URL', PARAMETERS.SQS_TESSERACT_URL, 3600);
+}
+
+export async function cachedSQSOLLamaUrl() {
+    return cachedParameter('SQS_OLLAMA_URL', PARAMETERS.SQS_OLLAMA_URL, 3600);
+}
+
 // Cache invalidation
 export async function invalidateParameterCache(parameterName) {
     const cacheKey = `param_${parameterName}`;
@@ -75,7 +83,9 @@ export async function invalidateAllParameters() {
         'AWS_S3_BUCKET_NAME',
         'DYNAMODB_TABLE_NAME',
         'QUT_USERNAME',
-        'AWS_CLIENT_SECRET_NAME'
+        'AWS_CLIENT_SECRET_NAME',
+        'SQS_TESSERACT_URL',
+        'SQS_OLLAMA_URL'
     ];
 
     for (const param of parameterNames) {
@@ -92,7 +102,13 @@ export async function warmUpCache() {
             cachedAWSClientId(),
             cachedAWSRegion(),
             cachedCognitoPoolDomain(),
-            cachedDomainName()
+            cachedDomainName(),
+            cachedAWSS3BucketName(),
+            cachedDynamoDBTableName(),
+            cachedQUTUsername(),
+            cachedAWSClientSecretName(),
+            cachedSQSTesseractUrl(),
+            cachedSQSOLLamaUrl()
         ]);
         console.log('Parameter cache warmed up successfully');
     } catch (error) {

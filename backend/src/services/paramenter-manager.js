@@ -13,6 +13,8 @@ export const PARAMETERS = {
   AWS_CLIENT_SECRET_NAME: async () => await fetchParameters("aws_client_secret_name"),
   DOMAIN_NAME: async () => await fetchParameters("domain-name"),
   COGNITO_POOL_DOMAIN: async () => await fetchParameters("cognito-pool-domain"),
+  SQS_TESSERACT_URL: async () => await fetchParameters("tesseract-queue"),
+  SQS_OLLAMA_URL: async () => await fetchParameters("llm-queue"),
 }
 
 const fetchParameters = async (parameter) => {

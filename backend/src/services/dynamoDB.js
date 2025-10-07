@@ -60,7 +60,7 @@ export const initializeDynamoDB = async () => {
     }
 };
 
-export const createReceiptRecord = async (userId, s3Key, fileInfo) => {
+export const createReceiptRecord = async (userId, s3Key, fileInfo, status = 'PENDING') => {
     // this function is placed here just to create the table before any operations
     // This should ideally be called once during app initialization
     // await initializeDynamoDB();
@@ -78,7 +78,7 @@ export const createReceiptRecord = async (userId, s3Key, fileInfo) => {
             receiptId,
             userId,
             s3Key,
-            status: 'PROCESSING',
+            status,
             fileInfo: {
                 originalName: fileInfo.originalname,
                 mimeType: fileInfo.mimetype,
@@ -86,7 +86,6 @@ export const createReceiptRecord = async (userId, s3Key, fileInfo) => {
             },
             createdAt: timestamp,
             updatedAt: timestamp,
-            ttl: Math.floor(Date.now() / 1000) + (30 * 24 * 60 * 60) // 30 days TTL
         };
 
         await docClient.send(new PutCommand({
@@ -94,11 +93,7 @@ export const createReceiptRecord = async (userId, s3Key, fileInfo) => {
             Item: item
         }));
 
-        return {
-            receiptId,
-            status: 'PROCESSING',
-            createdAt: timestamp
-        };
+        return item;
     } catch (error) {
         console.error('Error creating receipt record:', error);
         throw new Error(`Failed to create receipt record: ${error.message}`);
