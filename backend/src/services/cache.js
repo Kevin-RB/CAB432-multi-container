@@ -5,7 +5,7 @@ import { promisify } from "node:util";
 let memcached = false;
 
 function connectToMemcached() {
-    const memcachedUrl = 'n12112798-cosmic-cache.km2jzi.cfg.apse2.cache.amazonaws.com:11211';
+    const memcachedUrl = process.env.MEMCACHED_URL || 'n12112798-cosmic-cache.km2jzi.cfg.apse2.cache.amazonaws.com:11211';
     memcached = new Memcached(memcachedUrl);
     
     memcached.on("failure", (details) => {

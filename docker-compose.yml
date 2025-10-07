@@ -38,6 +38,7 @@ services:
       - AWS_PROFILE=default
       - AWS_SDK_LOAD_CONFIG=1
       - AWS_EC2_METADATA_DISABLED=true
+      - MEMCACHED_URL=memcached:11211  # Local
     volumes:
       - ${USERPROFILE}/.aws:/root/.aws:ro
     networks:
@@ -101,6 +102,19 @@ services:
       "
     restart: "no"
 
+  memcached:
+    image: memcached:1.6-alpine
+    container_name: memcached-local
+    ports:
+      - "11211:11211"
+    command: memcached -m 64  # 64MB memory limit (matches ElastiCache t4g.micro)
+    networks:
+      - app-net
+    healthcheck:
+      test: ["CMD", "nc", "-z", "localhost", "11211"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
 networks:
   app-net:
 
