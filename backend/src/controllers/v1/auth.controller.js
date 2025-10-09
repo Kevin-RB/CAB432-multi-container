@@ -336,7 +336,7 @@ async function getRedirectUri(req) {
         return `http://${host}${callbackPath}`;
     }
 
-    const baseUrl = await PARAMETERS.DOMAIN_NAME();
+    const baseUrl = await PARAMETERS.DOMAIN_API();
     const callbackUrl = new URL(callbackPath, `https://${baseUrl}`);
     console.log("Callback URL for production:", callbackUrl.toString());
 
