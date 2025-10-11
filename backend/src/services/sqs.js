@@ -1,7 +1,9 @@
 import { SQSClient, SendMessageCommand, ReceiveMessageCommand, DeleteMessageCommand } from '@aws-sdk/client-sqs';
 import { cachedSQSTesseractUrl } from './cachedParameters.js';
 
-const sqsClient = new SQSClient({});
+const sqsClient = new SQSClient({ 
+  region: process.env.AWS_REGION || 'ap-southeast-2' 
+});
 
 /**
  * Send a message to an SQS queue

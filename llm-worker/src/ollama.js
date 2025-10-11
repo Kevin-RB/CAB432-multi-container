@@ -30,7 +30,7 @@ const ollamaOptions = {
 export const extractReceiptInfo = (receiptPlainText) => {
     const options = {
         ...ollamaOptions.options.deterministic,
-        num_thread: 8,  // Force Ollama to use 8 threads (adjust based on instance size)
+        // Let Ollama auto-detect optimal thread count based on available CPUs
     };
 
     const llmResponse = ollama.generate({
@@ -79,7 +79,7 @@ export const extractReceiptInfo = (receiptPlainText) => {
 export const generateRecipeSuggestions = (ingredients) => {
     const options = {
         ...ollamaOptions.options.creative,
-        num_thread: 8,  // Force high CPU usage
+        // Let Ollama auto-detect optimal thread count
     };
 
     const llmResponse = ollama.generate({

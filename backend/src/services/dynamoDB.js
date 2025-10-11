@@ -4,7 +4,9 @@ import { v4 as uuidv4 } from 'uuid';
 import { getQutUsername, getTableName, getTableSchema } from '../utils/dynamo-utils.js';
 
 // Initialize DynamoDB client
-const client = new DynamoDBClient({});
+const client = new DynamoDBClient({ 
+  region: process.env.AWS_REGION || 'ap-southeast-2' 
+});
 const docClient = DynamoDBDocumentClient.from(client);
 
 // Check if table exists
@@ -134,7 +136,8 @@ export const updateReceiptRecord = async (receiptId, updateData) => {
         }
 
         if (updateData.error) {
-            updateExpression.push('errorDetails = :error');
+            updateExpression.push('#errorDetails = :error');
+            expressionAttributeNames['#errorDetails'] = 'errorDetails';
             expressionAttributeValues[':error'] = updateData.error;
         }
 

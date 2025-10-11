@@ -1,7 +1,9 @@
 
 import { SSMClient, GetParameterCommand } from "@aws-sdk/client-ssm";
 
-const client = new SSMClient({});
+const client = new SSMClient({ 
+  region: process.env.AWS_REGION || 'ap-southeast-2' 
+});
 
 export const PARAMETERS = {
   AWS_S3_BUCKET_NAME: async () => await fetchParameters("aws_s3_bucket_name"),

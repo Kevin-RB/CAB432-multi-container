@@ -2,8 +2,8 @@ import { SQSClient, ReceiveMessageCommand, DeleteMessageCommand, SendMessageComm
 import { S3Client, GetObjectCommand } from '@aws-sdk/client-s3';
 import axios from 'axios';
 
-const sqsClient = new SQSClient({ region: process.env.AWS_REGION || 'ap-southeast-2' });
-const s3Client = new S3Client({ region: process.env.AWS_REGION || 'ap-southeast-2' });
+const sqsClient = new SQSClient({ });
+const s3Client = new S3Client({ });
 
 const OCR_QUEUE_URL = process.env.OCR_QUEUE_URL;
 const LLM_QUEUE_URL = process.env.LLM_QUEUE_URL;

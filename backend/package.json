@@ -8,7 +8,7 @@
     "start": "node src/app.js",
     "dev": "node --watch app.js",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "docker:build-push": "docker build -t api-prod . && docker tag api-prod 901444280953.dkr.ecr.ap-southeast-2.amazonaws.com/n12112798-kr-m5:api-prod-v3.0.3 && docker push 901444280953.dkr.ecr.ap-southeast-2.amazonaws.com/n12112798-kr-m5:api-prod-v3.0.3"
+    "docker:build-push": "docker build -t api-prod . && docker tag api-prod 901444280953.dkr.ecr.ap-southeast-2.amazonaws.com/n12112798-kr-m5:api-prod-v3.0.4 && docker push 901444280953.dkr.ecr.ap-southeast-2.amazonaws.com/n12112798-kr-m5:api-prod-v3.0.4"
   },
   "keywords": [],
   "author": "",
