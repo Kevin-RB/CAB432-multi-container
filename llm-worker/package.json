@@ -8,7 +8,7 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node src/worker.js",
     "docker:build": "docker build -f Dockerfile -t llm-worker .",
-    "docker:push": "docker tag llm-worker 901444280953.dkr.ecr.ap-southeast-2.amazonaws.com/n12112798-kr-m5:llm-worker-v1.0. && docker push 901444280953.dkr.ecr.ap-southeast-2.amazonaws.com/n12112798-kr-m5:llm-worker-v1.0.1",
+    "docker:push": "docker tag llm-worker 901444280953.dkr.ecr.ap-southeast-2.amazonaws.com/n12112798-kr-m5:llm-worker-v1.0.1 && docker push 901444280953.dkr.ecr.ap-southeast-2.amazonaws.com/n12112798-kr-m5:llm-worker-v1.0.1",
     "docker:build-push": "npm run docker:build && npm run docker:push"
   },
   "keywords": [],

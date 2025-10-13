@@ -55,8 +55,11 @@ async function processOcrMessage(message) {
 
     } catch (error) {
         console.error(`Error processing OCR for ${receiptId}:`, error);
-        // Message will become visible again after visibility timeout
-        // Consider: Send to DLQ after X retries
+        
+        // DO NOT delete message - let it retry
+        // After 3 failed attempts (maxReceiveCount), SQS automatically moves it to DLQ
+        // Lambda will then update DynamoDB with FAILED status
+        console.log(`Message will be retried. Receive count will increment.`);
     }
 }
 

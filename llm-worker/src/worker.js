@@ -90,25 +90,11 @@ async function processLlmMessage(message) {
 
     } catch (error) {
         console.error(`Error processing LLM for ${receiptId}:`, error);
-
-        // Update as FAILED
-        await dynamoClient.send(new UpdateCommand({
-            TableName: RECEIPTS_TABLE,
-            Key: { 
-                'qut-username': qutUsername,
-                receiptId: receiptId 
-            },
-            UpdateExpression: 'SET #status = :status, #errorDetails = :error, updatedAt = :time',
-            ExpressionAttributeNames: {
-                '#status': 'status',
-                '#errorDetails': 'errorDetails'
-            },
-            ExpressionAttributeValues: {
-                ':status': 'FAILED',
-                ':error': { message: error.message, timestamp: new Date().toISOString() },
-                ':time': new Date().toISOString()
-            }
-        }));
+        
+        // DO NOT delete message - let it retry
+        // After 3 failed attempts (maxReceiveCount), SQS automatically moves it to DLQ
+        // Lambda will then update DynamoDB with FAILED status
+        console.log(`Message will be retried. Receive count will increment.`);
     }
 }
 

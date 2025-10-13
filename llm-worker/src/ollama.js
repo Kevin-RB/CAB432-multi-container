@@ -24,13 +24,14 @@ const ollamaOptions = {
             top_k: 40,
             top_p: 0.9,
         }
-    }
+    },
+    num_thread: parseInt(process.env.NUM_THREADS) || 2 // Use all available vCPUs (ECS task has 2 vCPU)
 }
 
 export const extractReceiptInfo = (receiptPlainText) => {
     const options = {
         ...ollamaOptions.options.deterministic,
-        // Let Ollama auto-detect optimal thread count based on available CPUs
+        num_thread: ollamaOptions.num_thread,
     };
 
     const llmResponse = ollama.generate({
@@ -79,7 +80,7 @@ export const extractReceiptInfo = (receiptPlainText) => {
 export const generateRecipeSuggestions = (ingredients) => {
     const options = {
         ...ollamaOptions.options.creative,
-        // Let Ollama auto-detect optimal thread count
+        num_thread: ollamaOptions.num_thread,
     };
 
     const llmResponse = ollama.generate({

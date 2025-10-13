@@ -35,7 +35,7 @@ services:
       - AWS_REGION=ap-southeast-2
       - LLM_QUEUE_URL=https://sqs.ap-southeast-2.amazonaws.com/901444280953/cosmic-llm
       - RECEIPTS_TABLE_NAME=n12112798-CosmicStorage
-      - OLLAMA_URL=http://ollama:11434
+      - OLLAMA_URL=http://n12112798-cosmic-internal-alb-278330678.ap-southeast-2.elb.amazonaws.com:11434
     networks:
       - app-net
     depends_on:
@@ -59,7 +59,7 @@ services:
     image: ollama/ollama:latest
     container_name: ollama
     ports:
-      - "11434:11434"
+      - "3002:11434"  # Map external 3002 to internal 11434
     volumes:
       - ollama:/root/.ollama
     networks:
