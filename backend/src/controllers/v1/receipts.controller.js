@@ -68,8 +68,6 @@ export const getReceiptById = async (req, res) => {
             });
         }
 
-        // console.log(`Fetching receipt: ${receiptId} for user: ${userId}`);
-
         // Get receipt from DynamoDB
         const receipt = await getReceiptRecord(receiptId);
 
