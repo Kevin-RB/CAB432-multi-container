@@ -1,8 +1,30 @@
-import { getCachedValue, setCachedValue, deleteCachedValue } from './cache.js';
-import { PARAMETERS } from './paramenter-manager.js'; // Note: using your existing file name (with typo)
+import { PARAMETERS } from './paramenter-manager.js';
+import { SECRET_STORE } from './secrets-manager.js';
 
-// Generic cached parameter function (same pattern as cachedFetch)
+// Cache configuration - set to false to disable caching
+const CACHE_ENABLED = false;
+
+// Conditional import of cache functions
+let getCachedValue, setCachedValue, deleteCachedValue;
+if (CACHE_ENABLED) {
+    try {
+        const cacheModule = await import('./cache.js');
+        getCachedValue = cacheModule.getCachedValue;
+        setCachedValue = cacheModule.setCachedValue;
+        deleteCachedValue = cacheModule.deleteCachedValue;
+        console.log('✅ Cache service enabled');
+    } catch (error) {
+        console.warn('⚠️  Cache service import failed, falling back to direct calls:', error.message);
+    }
+}
+
+// Generic cached parameter function
 async function cachedParameter(parameterName, getter, ttlSeconds = 1800) {
+    if (!CACHE_ENABLED || !getCachedValue) {
+        // Direct call without caching
+        return await getter();
+    }
+
     const cacheKey = `param_${parameterName}`;
     
     // Check to see if the parameter is in the cache
@@ -20,9 +42,9 @@ async function cachedParameter(parameterName, getter, ttlSeconds = 1800) {
     return fetchedValue;
 }
 
-// Cached parameter functions (following the same pattern as cachedFetch)
+// Cached parameter functions
 export async function cachedAWSUserPoolId() {
-    return cachedParameter('AWS_USER_POOL_ID', PARAMETERS.AWS_USER_POOL_ID, 3600); // 1 hour
+    return cachedParameter('AWS_USER_POOL_ID', PARAMETERS.AWS_USER_POOL_ID, 3600);
 }
 
 export async function cachedAWSClientId() {
@@ -38,7 +60,7 @@ export async function cachedCognitoPoolDomain() {
 }
 
 export async function cachedDomainName() {
-    return cachedParameter('DOMAIN_NAME', PARAMETERS.DOMAIN_NAME, 1800); // 30 minutes
+    return cachedParameter('DOMAIN_NAME', PARAMETERS.DOMAIN_NAME, 1800);
 }
 
 export async function cachedAWSS3BucketName() {
@@ -57,8 +79,21 @@ export async function cachedAWSClientSecretName() {
     return cachedParameter('AWS_CLIENT_SECRET_NAME', PARAMETERS.AWS_CLIENT_SECRET_NAME, 3600);
 }
 
+export async function cachedSQSTesseractUrl() {
+    return cachedParameter('SQS_TESSERACT_URL', PARAMETERS.SQS_TESSERACT_URL, 3600);
+}
+
+export async function cachedSQSOLLamaUrl() {
+    return cachedParameter('SQS_OLLAMA_URL', PARAMETERS.SQS_OLLAMA_URL, 3600);
+}
+
 // Cache invalidation
 export async function invalidateParameterCache(parameterName) {
+    if (!CACHE_ENABLED || !deleteCachedValue) {
+        console.log(`Cache invalidation skipped (cache disabled): ${parameterName}`);
+        return;
+    }
+    
     const cacheKey = `param_${parameterName}`;
     await deleteCachedValue(cacheKey);
     console.log(`Invalidated cache for parameter: ${parameterName}`);
@@ -66,6 +101,11 @@ export async function invalidateParameterCache(parameterName) {
 
 // Invalidate all parameters
 export async function invalidateAllParameters() {
+    if (!CACHE_ENABLED) {
+        console.log('Cache invalidation skipped (cache disabled)');
+        return;
+    }
+
     const parameterNames = [
         'AWS_USER_POOL_ID',
         'AWS_CLIENT_ID', 
@@ -75,7 +115,9 @@ export async function invalidateAllParameters() {
         'AWS_S3_BUCKET_NAME',
         'DYNAMODB_TABLE_NAME',
         'QUT_USERNAME',
-        'AWS_CLIENT_SECRET_NAME'
+        'AWS_CLIENT_SECRET_NAME',
+        'SQS_TESSERACT_URL',
+        'SQS_OLLAMA_URL'
     ];
 
     for (const param of parameterNames) {
@@ -85,6 +127,11 @@ export async function invalidateAllParameters() {
 
 // Warm up cache by pre-loading commonly used parameters
 export async function warmUpCache() {
+    if (!CACHE_ENABLED) {
+        console.log('⚠️  Cache warm-up skipped (cache disabled) - parameters will be fetched on demand');
+        return;
+    }
+
     console.log('Warming up parameter cache...');
     try {
         await Promise.all([
@@ -92,10 +139,16 @@ export async function warmUpCache() {
             cachedAWSClientId(),
             cachedAWSRegion(),
             cachedCognitoPoolDomain(),
-            cachedDomainName()
+            cachedDomainName(),
+            cachedAWSS3BucketName(),
+            cachedDynamoDBTableName(),
+            cachedQUTUsername(),
+            cachedAWSClientSecretName(),
+            cachedSQSTesseractUrl(),
+            cachedSQSOLLamaUrl()
         ]);
-        console.log('Parameter cache warmed up successfully');
+        console.log('✅ Parameter cache warmed up successfully');
     } catch (error) {
-        console.error('Error warming up cache:', error);
+        console.error('❌ Error warming up cache:', error);
     }
 }

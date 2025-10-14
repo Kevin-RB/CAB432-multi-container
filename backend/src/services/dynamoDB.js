@@ -4,7 +4,9 @@ import { v4 as uuidv4 } from 'uuid';
 import { getQutUsername, getTableName, getTableSchema } from '../utils/dynamo-utils.js';
 
 // Initialize DynamoDB client
-const client = new DynamoDBClient({});
+const client = new DynamoDBClient({ 
+  region: process.env.AWS_REGION || 'ap-southeast-2' 
+});
 const docClient = DynamoDBDocumentClient.from(client);
 
 // Check if table exists
@@ -60,7 +62,7 @@ export const initializeDynamoDB = async () => {
     }
 };
 
-export const createReceiptRecord = async (userId, s3Key, fileInfo) => {
+export const createReceiptRecord = async (userId, s3Key, fileInfo, status = 'PENDING') => {
     // this function is placed here just to create the table before any operations
     // This should ideally be called once during app initialization
     // await initializeDynamoDB();
@@ -78,7 +80,7 @@ export const createReceiptRecord = async (userId, s3Key, fileInfo) => {
             receiptId,
             userId,
             s3Key,
-            status: 'PROCESSING',
+            status,
             fileInfo: {
                 originalName: fileInfo.originalname,
                 mimeType: fileInfo.mimetype,
@@ -86,7 +88,6 @@ export const createReceiptRecord = async (userId, s3Key, fileInfo) => {
             },
             createdAt: timestamp,
             updatedAt: timestamp,
-            ttl: Math.floor(Date.now() / 1000) + (30 * 24 * 60 * 60) // 30 days TTL
         };
 
         await docClient.send(new PutCommand({
@@ -94,11 +95,7 @@ export const createReceiptRecord = async (userId, s3Key, fileInfo) => {
             Item: item
         }));
 
-        return {
-            receiptId,
-            status: 'PROCESSING',
-            createdAt: timestamp
-        };
+        return item;
     } catch (error) {
         console.error('Error creating receipt record:', error);
         throw new Error(`Failed to create receipt record: ${error.message}`);
@@ -139,7 +136,8 @@ export const updateReceiptRecord = async (receiptId, updateData) => {
         }
 
         if (updateData.error) {
-            updateExpression.push('errorDetails = :error');
+            updateExpression.push('#errorDetails = :error');
+            expressionAttributeNames['#errorDetails'] = 'errorDetails';
             expressionAttributeValues[':error'] = updateData.error;
         }
 

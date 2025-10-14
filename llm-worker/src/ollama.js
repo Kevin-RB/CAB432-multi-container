@@ -1,19 +1,37 @@
 import { Ollama } from 'ollama'
-import os from 'os';
-import config from '../config/index.js';
-import { receiptJSONschema, recipeJSONschema } from '../models/receipt.js';
+import { receiptJSONschema, recipeJSONschema } from './models/receipt.js';
+
+const OLLAMA_URL = process.env.OLLAMA_URL || 'http://ollama:11434';
 
 const ollama = new Ollama({
-    host: config.services.ollama.baseUrl,
+    host: OLLAMA_URL,
     timeout: 300000
 })
 
 export default ollama
 
+const ollamaOptions = {
+    model: 'gemma3:1b',
+    options: {
+        deterministic: {
+            temperature: 0,
+            top_k: 1,
+            top_p: 1.0,
+            repeat_penalty: 1.1
+        },
+        creative: {
+            temperature: 0.7,
+            top_k: 40,
+            top_p: 0.9,
+        }
+    },
+    num_thread: parseInt(process.env.NUM_THREADS) || 2 // Use all available vCPUs (ECS task has 2 vCPU)
+}
+
 export const extractReceiptInfo = (receiptPlainText) => {
     const options = {
-        ...config.ollama.options.deterministic,
-        num_thread: os.cpus().length,
+        ...ollamaOptions.options.deterministic,
+        num_thread: ollamaOptions.num_thread,
     };
 
     const llmResponse = ollama.generate({
@@ -49,7 +67,7 @@ export const extractReceiptInfo = (receiptPlainText) => {
                 ${receiptPlainText}
 
                 Extract the data as JSON:`,
-        model: config.ollama.model,
+        model: ollamaOptions.model,
         stream: false,
         format: receiptJSONschema,
         options: options
@@ -61,8 +79,8 @@ export const extractReceiptInfo = (receiptPlainText) => {
 
 export const generateRecipeSuggestions = (ingredients) => {
     const options = {
-        ...config.ollama.options.creative,
-        num_thread: os.cpus().length,
+        ...ollamaOptions.options.creative,
+        num_thread: ollamaOptions.num_thread,
     };
 
     const llmResponse = ollama.generate({
@@ -82,7 +100,7 @@ export const generateRecipeSuggestions = (ingredients) => {
                 - Keep the recipe names short and descriptive.
 
                 Return the suggestions as a JSON array of strings:`,
-        model: config.ollama.model,
+        model: ollamaOptions.model,
         stream: false,
         format: recipeJSONschema,
         options: options

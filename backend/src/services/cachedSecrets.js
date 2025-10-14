@@ -1,8 +1,29 @@
-import { getCachedValue, setCachedValue, deleteCachedValue } from './cache.js';
 import { SECRET_STORE } from './secrets-manager.js';
 
-// Generic cached secret function (same pattern as cachedParameter)
+// Cache configuration - set to false to disable caching
+const CACHE_ENABLED = false;
+
+// Conditional import of cache functions
+let getCachedValue, setCachedValue, deleteCachedValue;
+if (CACHE_ENABLED) {
+    try {
+        const cacheModule = await import('./cache.js');
+        getCachedValue = cacheModule.getCachedValue;
+        setCachedValue = cacheModule.setCachedValue;
+        deleteCachedValue = cacheModule.deleteCachedValue;
+        console.log('✅ Secrets cache service enabled');
+    } catch (error) {
+        console.warn('⚠️  Secrets cache service import failed, falling back to direct calls:', error.message);
+    }
+}
+
+// Generic cached secret function
 async function cachedSecret(secretName, getter, ttlSeconds = 3600) {
+    if (!CACHE_ENABLED || !getCachedValue) {
+        // Direct call without caching
+        return await getter();
+    }
+
     const cacheKey = `secret_${secretName}`;
     
     // Check to see if the secret is in the cache
@@ -22,15 +43,20 @@ async function cachedSecret(secretName, getter, ttlSeconds = 3600) {
 
 // Cached secret functions
 export async function cachedAWSClientSecret() {
-    return cachedSecret('AWS_CLIENT_SECRET', SECRET_STORE.AWS_CLIENT_SECRET, 3600); // 1 hour
+    return cachedSecret('AWS_CLIENT_SECRET', SECRET_STORE.AWS_CLIENT_SECRET, 3600);
 }
 
 export async function cachedYouTubeAPIKey() {
-    return cachedSecret('YOUTUBE_API_KEY', SECRET_STORE.YOUTUBE_API_KEY, 3600); // 1 hour
+    return cachedSecret('YOUTUBE_API_KEY', SECRET_STORE.YOUTUBE_API_KEY, 3600);
 }
 
 // Cache invalidation
 export async function invalidateSecretCache(secretName) {
+    if (!CACHE_ENABLED || !deleteCachedValue) {
+        console.log(`Cache invalidation skipped (cache disabled): ${secretName}`);
+        return;
+    }
+
     const cacheKey = `secret_${secretName}`;
     await deleteCachedValue(cacheKey);
     console.log(`Invalidated cache for secret: ${secretName}`);
@@ -38,6 +64,11 @@ export async function invalidateSecretCache(secretName) {
 
 // Invalidate all secrets
 export async function invalidateAllSecrets() {
+    if (!CACHE_ENABLED) {
+        console.log('Cache invalidation skipped (cache disabled)');
+        return;
+    }
+
     const secretNames = [
         'AWS_CLIENT_SECRET',
         'YOUTUBE_API_KEY'
@@ -50,14 +81,19 @@ export async function invalidateAllSecrets() {
 
 // Warm up cache by pre-loading commonly used secrets
 export async function warmUpSecretsCache() {
+    if (!CACHE_ENABLED) {
+        console.log('⚠️  Secrets cache warm-up skipped (cache disabled) - secrets will be fetched on demand');
+        return;
+    }
+
     console.log('Warming up secrets cache...');
     try {
         await Promise.all([
             cachedYouTubeAPIKey(),
             // Only cache AWS_CLIENT_SECRET if needed frequently
         ]);
-        console.log('Secrets cache warmed up successfully');
+        console.log('✅ Secrets cache warmed up successfully');
     } catch (error) {
-        console.error('Error warming up secrets cache:', error);
+        console.error('❌ Error warming up secrets cache:', error);
     }
 }

@@ -5,7 +5,7 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm ci
 
-ENV VITE_API_BASE_URL=https://cosmic.cab432.com
+ENV VITE_API_BASE_URL=https://api.cosmic.cab432.com
 
 # Copy source code
 COPY . .

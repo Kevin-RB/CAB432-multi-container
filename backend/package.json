@@ -8,16 +8,19 @@
     "start": "node src/app.js",
     "dev": "node --watch app.js",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "docker:build-push": "docker build -t api-prod . && docker tag api-prod 901444280953.dkr.ecr.ap-southeast-2.amazonaws.com/n12112798-kr-m5:api-prod-cache-v1.0.0 && docker push 901444280953.dkr.ecr.ap-southeast-2.amazonaws.com/n12112798-kr-m5:api-prod-cache-v1.0.0"
+    "docker:build": "docker build -t api-prod .",
+    "docker:push": "docker tag api-prod 901444280953.dkr.ecr.ap-southeast-2.amazonaws.com/n12112798-kr-m5:api-prod-v4.0.0 && docker push 901444280953.dkr.ecr.ap-southeast-2.amazonaws.com/n12112798-kr-m5:api-prod-v4.0.0",
+    "docker:build-push": "npm run docker:build && npm run docker:push"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@aws-sdk/client-cognito-identity-provider": "^3.879.0", 
+    "@aws-sdk/client-cognito-identity-provider": "^3.879.0",
     "@aws-sdk/client-dynamodb": "^3.888.0",
     "@aws-sdk/client-s3": "^3.884.0",
     "@aws-sdk/client-secrets-manager": "^3.894.0",
+    "@aws-sdk/client-sqs": "^3.901.0",
     "@aws-sdk/client-ssm": "^3.894.0",
     "@aws-sdk/lib-dynamodb": "^3.888.0",
     "@aws-sdk/s3-request-presigner": "^3.895.0",
@@ -25,10 +28,8 @@
     "axios": "^1.12.2",
     "cors": "^2.8.5",
     "express": "^5.1.0",
-    "jsonwebtoken": "^9.0.2",
     "memcached": "^2.2.2",
     "multer": "^2.0.2",
-    "ollama": "^0.5.17",
     "zod": "^4.1.0"
   }
 }

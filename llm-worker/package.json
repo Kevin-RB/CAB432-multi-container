@@ -1,0 +1,25 @@
+{
+  "type": "module",
+  "name": "llm-worker",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node src/worker.js",
+    "docker:build": "docker build -f Dockerfile -t llm-worker .",
+    "docker:push": "docker tag llm-worker 901444280953.dkr.ecr.ap-southeast-2.amazonaws.com/n12112798-kr-m5:llm-worker-v1.0.1 && docker push 901444280953.dkr.ecr.ap-southeast-2.amazonaws.com/n12112798-kr-m5:llm-worker-v1.0.1",
+    "docker:build-push": "npm run docker:build && npm run docker:push"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.902.0",
+    "@aws-sdk/client-sqs": "^3.901.0",
+    "@aws-sdk/lib-dynamodb": "^3.902.0",
+    "axios": "^1.12.2",
+    "ollama": "^0.6.0",
+    "zod": "^4.1.12"
+  }
+}

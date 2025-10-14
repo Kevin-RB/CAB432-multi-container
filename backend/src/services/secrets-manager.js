@@ -5,7 +5,9 @@ import {
 } from "@aws-sdk/client-secrets-manager";
 import { PARAMETERS } from "./paramenter-manager.js";
 
-const client = new SecretsManagerClient({});
+const client = new SecretsManagerClient({ 
+  region: process.env.AWS_REGION || 'ap-southeast-2' 
+});
 
 export const SECRET_STORE = {
     AWS_CLIENT_SECRET: async () => await fetchSecrets("AWS_CLIENT_SECRET"),
