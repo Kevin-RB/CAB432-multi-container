@@ -3,8 +3,11 @@
 
 This repository contains a multi-container receipt-processing application that was originally developed to run locally with Docker Compose but is intended to be deployed and operated using AWS services (ECS, ECR, ALB, SQS, S3, EFS, ElastiCache, etc.).
 
-This README provides context about the app, technologies used, a quick local run guide, and a focused reference for deploying the services to AWS ECS. If you have an architecture diagram, add it to `docs/architecture.png` (or `docs/architecture.svg`) and it will be embedded below.
+Developed under the CAB432 Cloud Computing unit at Queensland University of Technology (QUT) using provided AWS resources.
+Live demo: [cosmic.cab432.com](https://cosmic.cab432.com/)https://cosmic.cab432.com
+This project has practical applications beyond academia. I plan to deploy a personal version soon.
 
+This README provides context about the app, technologies used, a quick local run guide, and a focused reference for deploying the services to AWS ECS.
 ## Table of contents
 
 - [Project overview](#project-overview)
