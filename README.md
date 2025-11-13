@@ -9,6 +9,8 @@ Live demo: [cosmic.cab432.com](https://cosmic.cab432.com/)
 
 This project has practical applications beyond academia. I plan to deploy a personal version soon.
 
+> Temporary Issue: A known bug may prevent uploads immediately after your initial Google login. To resolve this, please log out and log in again. This will properly load your permissions.
+
 This README provides context about the app, technologies used, a quick local run guide, and a focused reference for deploying the services to AWS ECS.
 ## Table of contents
 
