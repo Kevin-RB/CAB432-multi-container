@@ -1,3 +1,6 @@
+# This was the way to test the app locally using docker-compose.
+# It uses local builds and mounts local AWS credentials.
+
 name: receipt-app
 
 services:
